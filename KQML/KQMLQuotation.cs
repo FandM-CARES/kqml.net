@@ -5,7 +5,7 @@ using System.IO;
 
 namespace KQML
 {
-    class KQMLQuotation : KQMLObject
+    public class KQMLQuotation : KQMLObject
     {
         public string QuoteType { get; }
         public KQMLObject KQMLObject { get; }

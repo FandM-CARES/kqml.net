@@ -5,7 +5,7 @@ using System.Text;
 
 namespace KQML
 {
-    public class KQMLString : object
+    public class KQMLString : KQMLObject
     {
         public string Data { get; }
         public int Length { get { return Data.Length; } }
