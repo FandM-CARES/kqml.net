@@ -6,7 +6,7 @@ using KQML.KQMLExceptions;
 
 namespace KQML
 {
-    public class KQMLPerformative
+    public class KQMLPerformative : KQMLObject
     {
         public KQMLList Data { get; }
         public int Count { get { return Data.Count; } }

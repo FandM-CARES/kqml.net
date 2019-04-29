@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -9,19 +10,20 @@ namespace KQML
     public class KQMLReader
     {
         public StreamReader Reader;
-        public StringBuilder Buff;
+        public StringBuilder Inbuf;
+        private static readonly Ilog _log = LogManager.GetLogger();
 
         public KQMLReader(StreamReader r)
         {
             Reader = r;
-            Buff = new StringBuilder();
+            Inbuf = new StringBuilder();
         }
 
-        public void Close()
-        {
-            Reader.Close();
-        
-        }
+        //public void Close()
+        //{
+        //    Reader.Close();
+
+        //}
 
         public char ReadChar()
         {
@@ -41,12 +43,12 @@ namespace KQML
         public static bool IsTokenChar(char ch)
         {
             string nonTokenChars = "'`\"#()";
-            if (!(ch == ' ') && nonTokenChars.Contains(ch))
+            if (!(string.IsNullOrEmpty(ch.ToString())) && nonTokenChars.Contains(ch))
                 return true;
             return false;
         }
 
-        public KQMLObject ReadExpr(bool backquoted=false)
+        public KQMLObject ReadExpr(bool backquoted = false)
         {
             char ch = (char)Reader.Peek();
             if (ch == '\'' || ch == '`')
@@ -55,16 +57,16 @@ namespace KQML
                 return ReadString();
             else if (ch == '(')
                 return ReadList(backquoted);
-            else if (ch ==',')
+            else if (ch == ',')
             {
                 if (!backquoted)
                 {
                     ch = ReadChar();
-                    throw new KQMLBadCommandException(Buff.ToString());
+                    throw new KQMLBadCommandException(Inbuf.ToString());
                 }
                 else
-                    ReadQuotation(backquoted);
-                
+                    return ReadQuotation(backquoted);
+
             }
             else
             {
@@ -73,9 +75,9 @@ namespace KQML
                 else
                 {
                     ch = ReadChar();
-                    throw new KQMLBadCharacterException(Buff.ToString());
+                    throw new KQMLBadCharacterException(Inbuf.ToString());
                 }
-            }           
+            }
         }
 
         public KQMLToken ReadToken()
@@ -86,18 +88,13 @@ namespace KQML
                 ch = (char)Reader.Peek();
                 if (IsTokenChar(ch))
                 {
-                    Buff.Append(ch);
+                    Inbuf.Append(ch);
                     ReadChar();
                 }
                 else break;
             }
 
-            return new KQMLToken(Buff.ToString());
-        }
-
-        public KQMLList ReadList(bool backquoted)
-        {
-            throw new NotImplementedException();
+            return new KQMLToken(Inbuf.ToString());
         }
 
         public KQMLQuotation ReadQuotation(bool backquoted)
@@ -123,13 +120,127 @@ namespace KQML
 
         private KQMLString ReadHashedString()
         {
-            throw new NotImplementedException();
+            StringBuilder buf = new StringBuilder();
+            int count = 0;
+            char ch;
+            for (int i = 0; i < 1000000; i++)
+            {
+                ch = ReadChar();
+                if (ch == '"')
+                    break;
+                if (!char.IsDigit(ch))
+                {
+                    throw new KQMLBadHashException(Buf.ToString());
+                }
+                else
+                {
+                    count = count * 10 + (int)ch;
+                }
+
+
+            }
+            if (count == 0)
+                return new KQMLString("");
+            else
+            {
+                for (int i = 0; i < count; i++)
+                {
+                    buf.Append(ReadChar());
+                }
+            }
+            return new KQMLString(buf.ToString());
         }
 
         public KQMLString ReadQuotedString()
         {
-            Buff = new StringBuilder();
-            
+            StringBuilder buf = new StringBuilder();
+            char ch;
+            for (int i = 0; i < 1000000; i++)
+            {
+                ch = ReadChar();
+                if (ch == '"')
+                    break;
+                if (ch == '\\')
+                {
+                    ch = ReadChar();
+                    if (ch == '\\')
+                    {
+                        Inbuf.Append("\\\\");
+                        continue;
+                    }
+                }
+                Inbuf.Append(ch);
+            }
+            return new KQMLString(buf.ToString());
+        }
+
+        public object ReadListForFile()
+        {
+            throw new NotImplementedException();
+        }
+
+        public KQMLList ReadList(bool backquoted = false)
+        {
+            KQMLList lst = new KQMLList();
+            char ch = ReadChar();
+            if (ch != '(')
+                throw new KQMLBadOpenException(Inbuf.ToString());
+            SkipWhitespace();
+            for (int i = 0; i < 1000000; i++)
+            {
+                ch = (char)Reader.Peek();
+                if (ch == ')')
+                    break;
+                lst.Append(ReadExpr(backquoted));
+                ch = (char)Reader.Peek();
+                if (ch != ')')
+                {
+                    if (ch != '(')
+                        ReadWhitespace();
+                }
+            }
+            ch = ReadChar();
+            if (ch != ')')
+                throw new KQMLBadCloseException(Inbuf.ToString());
+            return lst;
+        }
+
+        private void ReadWhitespace()
+        {
+            char ch = ReadChar();
+            if (!char.IsWhiteSpace(ch))
+            {
+                //TODO log error
+                throw new KQMLExpectedWhitespaceException(Inbuf.ToString());
+            }
+            else
+            {
+                SkipWhitespace();
+            }
+
+        }
+
+        private void SkipWhitespace()
+        {
+            bool done = false;
+            while (!done)
+            {
+                char ch = (char)Reader.Peek();
+                if (!char.IsWhiteSpace(ch))
+                    done = true;
+                else
+                    ReadChar();
+            }
+        }
+
+        private KQMLObject ReadPerformative()
+        {
+            SkipWhitespace();
+            KQMLObject expr = ReadExpr();
+            if (expr is KQMLList)
+                return new KQMLPerformative((KQMLList)expr);
+            else
+                throw new KQMLExpectedListException(Inbuf.ToString());
         }
     }
 }
