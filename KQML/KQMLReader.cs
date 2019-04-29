@@ -130,7 +130,7 @@ namespace KQML
                     break;
                 if (!char.IsDigit(ch))
                 {
-                    throw new KQMLBadHashException(Buf.ToString());
+                    throw new KQMLBadHashException(buf.ToString());
                 }
                 else
                 {

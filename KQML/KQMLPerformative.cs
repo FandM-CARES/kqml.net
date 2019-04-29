@@ -79,10 +79,12 @@ namespace KQML
         {
             stream.Write(Data);
         }
-        public static void FromString()
+        public static KQMLPerformative FromString(string s)
         {
-            //TODO: Need to implement FromString after KQMLReader
-            throw new NotImplementedException();
+            byte[] byteArray = Encoding.Unicode.GetBytes(s);
+            StreamReader sreader = new StreamReader(new MemoryStream(byteArray));
+            KQMLReader kreader = new KQMLReader(sreader);
+            return new KQMLPerformative(kreader.ReadList());
         }
         public override string ToString()
         {

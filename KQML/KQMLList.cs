@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 
@@ -201,10 +202,13 @@ namespace KQML
         {
             throw new NotImplementedException();
         }
-        //from_string??!! 
+ 
         public static KQMLList FromString(string s)
         {
-            throw new NotImplementedException(); //needs reader first
+            byte[] byteArray = Encoding.Unicode.GetBytes(s);
+            StreamReader sreader = new StreamReader(new MemoryStream(byteArray));
+            KQMLReader kreader = new KQMLReader(sreader);
+            return kreader.ReadList();
         }
         public KQMLList Sublist(int from)
         {
