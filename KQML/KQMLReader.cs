@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using KQML.KQMLExceptions;
+using log4net;
 
 namespace KQML
 {
@@ -11,7 +12,7 @@ namespace KQML
     {
         public StreamReader Reader;
         public StringBuilder Inbuf;
-        private static readonly Ilog _log = LogManager.GetLogger();
+        private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
 
         public KQMLReader(StreamReader r)
         {
@@ -19,11 +20,11 @@ namespace KQML
             Inbuf = new StringBuilder();
         }
 
-        //public void Close()
-        //{
-        //    Reader.Close();
+        public void Close()
+        {
+            Reader.Close();
 
-        //}
+        }
 
         public char ReadChar()
         {
@@ -99,7 +100,6 @@ namespace KQML
 
         public KQMLQuotation ReadQuotation(bool backquoted)
         {
-            //TODO
             char ch = (char)Reader.Peek();
             if (ch == '`')
                 return new KQMLQuotation(ch.ToString(), ReadExpr(true));
@@ -233,7 +233,7 @@ namespace KQML
             }
         }
 
-        private KQMLObject ReadPerformative()
+        public KQMLObject ReadPerformative()
         {
             SkipWhitespace();
             KQMLObject expr = ReadExpr();
