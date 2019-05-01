@@ -8,7 +8,7 @@ using log4net;
 
 namespace KQML
 {
-    public class KQMLReader
+    public class KQMLReader : IDisposable
     {
         public StreamReader Reader;
         public StringBuilder Inbuf;
@@ -18,12 +18,21 @@ namespace KQML
         {
             Reader = r;
             Inbuf = new StringBuilder();
+            
         }
 
         public void Close()
         {
-            Reader.Close();
+            if (Reader != null)
+            {
+                Reader.ReadToEnd();
+                Reader.Dispose();
+            }
+        }
 
+        public void Dispose()
+        {
+            Close();
         }
 
         public char ReadChar()

@@ -79,13 +79,31 @@ namespace KQML
         {
             stream.Write(Data);
         }
+
         public static KQMLPerformative FromString(string s)
         {
-            byte[] byteArray = Encoding.Unicode.GetBytes(s);
-            StreamReader sreader = new StreamReader(new MemoryStream(byteArray));
-            KQMLReader kreader = new KQMLReader(sreader);
-            return new KQMLPerformative(kreader.ReadList());
+            if (s != null)
+            {
+                byte[] byteArray = Encoding.Unicode.GetBytes(s);
+                StreamReader sreader = null;
+                try
+                {
+                    sreader = new StreamReader(new MemoryStream(byteArray));
+                    using (KQMLReader kreader = new KQMLReader(sreader))
+                    {
+                        sreader = null;
+                        return new KQMLPerformative(kreader.ReadList());
+                    }
+                }
+                finally
+                {
+                    if (sreader != null)
+                        sreader.Dispose();
+                }
+            }
+            return null;
         }
+
         public override string ToString()
         {
             return Data.ToString();

@@ -205,11 +205,28 @@ namespace KQML
  
         public static KQMLList FromString(string s)
         {
-            byte[] byteArray = Encoding.Unicode.GetBytes(s);
-            StreamReader sreader = new StreamReader(new MemoryStream(byteArray));
-            KQMLReader kreader = new KQMLReader(sreader);
-            return kreader.ReadList();
+            if (s != null)
+            {
+                byte[] byteArray = Encoding.Unicode.GetBytes(s);
+                StreamReader sreader = null;
+                try
+                {
+                    sreader = new StreamReader(new MemoryStream(byteArray));
+                    using (KQMLReader kreader = new KQMLReader(sreader))
+                    {
+                        sreader = null;
+                        return kreader.ReadList();
+                    }
+                }
+                finally
+                {
+                    if (sreader != null)
+                        sreader.Dispose();
+                }
+            }
+            return null;
         }
+
         public KQMLList Sublist(int from)
         {
             return new KQMLList(Data.Skip(from).ToList());
