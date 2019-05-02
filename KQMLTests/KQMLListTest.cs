@@ -30,12 +30,19 @@ namespace KQMLTests
             Assert.AreEqual("a", kl.Data[0].ToString());
         }
 
-        /*
-         * def test_gets():
+        
+         /* def test_gets():
            kl = KQMLList.from_string(b'(:hello "")')
            hello = kl.gets('hello')
            assert(hello == '') */
         
         //TODO: FromString unimplmented. Test skipped.
+        [TestMethod]
+        public void FromStringTest()
+        {
+            KQMLList kl = KQMLList.FromString("(:hello \"\")");
+            string hello = kl.Gets("hello");
+            Assert.AreEqual("", hello);
+        }
     }
 }

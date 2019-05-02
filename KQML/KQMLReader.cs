@@ -12,7 +12,7 @@ namespace KQML
     {
         public StreamReader Reader;
         public StringBuilder Inbuf;
-        private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
+        //private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
 
         public KQMLReader(StreamReader r)
         {
@@ -38,6 +38,7 @@ namespace KQML
         public char ReadChar()
         {
             char ch = (char)Reader.Read();
+            Inbuf.Append(ch);
             return ch;
 
         }

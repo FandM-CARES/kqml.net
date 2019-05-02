@@ -84,7 +84,7 @@ namespace KQML
         {
             if (s != null)
             {
-                byte[] byteArray = Encoding.Unicode.GetBytes(s);
+                byte[] byteArray = Encoding.ASCII.GetBytes(s);
                 StreamReader sreader = null;
                 try
                 {

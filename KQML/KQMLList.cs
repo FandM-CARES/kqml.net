@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -207,7 +206,7 @@ namespace KQML
         {
             if (s != null)
             {
-                byte[] byteArray = Encoding.Unicode.GetBytes(s);
+                byte[] byteArray = Encoding.ASCII.GetBytes(s);
                 StreamReader sreader = null;
                 try
                 {
