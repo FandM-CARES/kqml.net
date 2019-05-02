@@ -33,14 +33,14 @@ namespace KQML
         {
             try
             {
-                for (int i = 0; i < 100000; i++)
+                while(!ShutdownIntiated)
                 {
                     KQMLPerformative msg = (KQMLPerformative)Reader.ReadPerformative();
                     DispatchMessage(msg);
                     // FIXME: not handling KQMLException
                 }
             }
-            catch (EndOfStreamException e)
+            catch (EndOfStreamException)
             {
                 //TODO: Log
                 Receiver.ReceiveEof();
@@ -49,13 +49,13 @@ namespace KQML
             {
                 Receiver.HandleException(e);
             }
-            catch (ArgumentException e)
+            catch (ArgumentException)
             {
                 //TODO: Log some more
             }
-            catch (Exception e)
+            catch (Exception)
             {
-                Console.Write("I dont't know how to handle keyboard interrupts");
+                Console.Write("I dont't know how to handle keyboard interrupts");   //TODO: keyboard interrupt?
 
             }
         }
@@ -66,10 +66,10 @@ namespace KQML
             // TODO: log
         }
 
-        // Can't shutdown because can't close Reader
+        // FIXME: Add Reader.close
         public void Shutdown()
         {
-            throw new NotImplementedException();
+            ShutdownIntiated = true;
 
         }
         private void DispatchMessage(KQMLPerformative msg)
@@ -85,18 +85,18 @@ namespace KQML
             if (replyIdObj != null)
             {
                 replyId = replyIdObj.ToString().ToUpper();
-                try
-                {
+                //try
+                //{
 
-                    value = ReplyContinuations[replyId];
-                    value.receive(); // FIXME: what are you receiving??
-                    ReplyContinuations.Remove(replyId);
-                }
-                catch (KeyNotFoundException)
-                {
-                    // TODO: log
+                //    value = ReplyContinuations[replyId];
+                //    value.receive(); // FIXME: what are you receiving??
+                //    ReplyContinuations.Remove(replyId);
+                //}
+                //catch (KeyNotFoundException)
+                //{
+                //    // TODO: log
 
-                }
+                //}
             }
             string vl = verb.ToLower();
             KQMLObject content = msg.Get("content");
@@ -125,7 +125,8 @@ namespace KQML
                     if (vl.Equals(cmt))
                     {
                         Type thing = Receiver.GetType();
-                        MethodInfo method = thing.GetMethod(methodName); //FIXME: there really is a method for Type called GetMethod x_x
+                        MethodInfo method = thing.GetMethod(methodName);
+                        method.Invoke(Receiver, new object[] { msg, content });
 
                     }
 
@@ -137,7 +138,7 @@ namespace KQML
                 {
                     if (vl.Equals(cmt))
                     {
-                        //TODO: Invoke method reflexively, but can't right now fsr
+                        //TODO: Invoke method reflexively
                     }
                 }
             }
