@@ -31,12 +31,11 @@ namespace KQMLTests
         }
 
         
-         /* def test_gets():
-           kl = KQMLList.from_string(b'(:hello "")')
-           hello = kl.gets('hello')
-           assert(hello == '') */
+          //def test_gets():
+          // kl = KQMLList.from_string(b'(:hello "")')
+          // hello = kl.gets('hello')
+          // assert(hello == '') 
         
-        //TODO: FromString unimplmented. Test skipped.
         [TestMethod]
         public void FromStringTest()
         {

@@ -12,12 +12,15 @@ namespace KQML
     {
         public StreamReader Reader;
         public StringBuilder Inbuf;
-        //private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
+        private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
+        
+
 
         public KQMLReader(StreamReader r)
         {
             Reader = r;
             Inbuf = new StringBuilder();
+            _log.Debug("KQMLReader ctor called");
             
         }
 
@@ -27,6 +30,7 @@ namespace KQML
             {
                 Reader.ReadToEnd();
                 Reader.Dispose();
+                _log.Debug("KQMLReader closed");
             }
         }
 
@@ -61,6 +65,8 @@ namespace KQML
 
         public KQMLObject ReadExpr(bool backquoted = false)
         {
+            _log.Debug("Reading Expression from" + Reader.ToString());
+
             char ch = (char)Reader.Peek();
             if (ch == '\'' || ch == '`')
                 return ReadQuotation(backquoted);
@@ -73,6 +79,7 @@ namespace KQML
                 if (!backquoted)
                 {
                     ch = ReadChar();
+                    _log.Error("Bad command: " + Inbuf.ToString());
                     throw new KQMLBadCommandException(Inbuf.ToString());
                 }
                 else
@@ -85,7 +92,9 @@ namespace KQML
                     return ReadToken();
                 else
                 {
+                    
                     ch = ReadChar();
+                    _log.Error("Not a character: " + Inbuf.ToString());
                     throw new KQMLBadCharacterException(Inbuf.ToString());
                 }
             }
@@ -94,23 +103,24 @@ namespace KQML
         public KQMLToken ReadToken()
         {
             char ch;
+            StringBuilder buf = new StringBuilder();
             for (int i = 0; i < 1000000; i++)
             {
                 ch = (char)Reader.Peek();
                 if (IsTokenChar(ch))
                 {
-                    Inbuf.Append(ch);
+                    buf.Append(ch);
                     ReadChar();
                 }
                 else break;
             }
 
-            return new KQMLToken(Inbuf.ToString());
+            return new KQMLToken(buf.ToString());
         }
 
         public KQMLQuotation ReadQuotation(bool backquoted)
         {
-            char ch = (char)Reader.Peek();
+            char ch = ReadChar();
             if (ch == '`')
                 return new KQMLQuotation(ch.ToString(), ReadExpr(true));
             else if (ch == '\'' || ch == ',')
@@ -121,7 +131,7 @@ namespace KQML
 
         public KQMLString ReadString()
         {
-            char ch = (char)Reader.Peek();
+            char ch = ReadChar();
             if (ch == '"')
                 return ReadQuotedString();
             else
@@ -140,6 +150,7 @@ namespace KQML
                     break;
                 if (!char.IsDigit(ch))
                 {
+                    _log.Error("Invalid hashed string in ReadHashedString()");
                     throw new KQMLBadHashException(buf.ToString());
                 }
                 else
@@ -186,6 +197,7 @@ namespace KQML
 
         public object ReadListForFile()
         {
+            //TODO: ReadListForFile
             throw new NotImplementedException();
         }
 
@@ -194,7 +206,10 @@ namespace KQML
             KQMLList lst = new KQMLList();
             char ch = ReadChar();
             if (ch != '(')
+            {
+                _log.Error($"BadOpenException: {Inbuf.ToString()}");
                 throw new KQMLBadOpenException(Inbuf.ToString());
+            }
             SkipWhitespace();
             for (int i = 0; i < 1000000; i++)
             {
@@ -211,16 +226,21 @@ namespace KQML
             }
             ch = ReadChar();
             if (ch != ')')
+            {
+                _log.Error($"BadCloseException: {Inbuf.ToString()}");
                 throw new KQMLBadCloseException(Inbuf.ToString());
+
+            }
             return lst;
         }
 
-        private void ReadWhitespace()
+        public void ReadWhitespace()
         {
             char ch = ReadChar();
             if (!char.IsWhiteSpace(ch))
             {
-                //TODO log error
+                _log.Error(
+                    $"ReadWhiteSpace called without whitespace: {Inbuf.ToString()}");
                 throw new KQMLExpectedWhitespaceException(Inbuf.ToString());
             }
             else
@@ -230,7 +250,7 @@ namespace KQML
 
         }
 
-        private void SkipWhitespace()
+        public void SkipWhitespace()
         {
             bool done = false;
             while (!done)
@@ -245,12 +265,19 @@ namespace KQML
 
         public KQMLObject ReadPerformative()
         {
+            Inbuf = new StringBuilder();
             SkipWhitespace();
+            Inbuf = new StringBuilder();
             KQMLObject expr = ReadExpr();
             if (expr is KQMLList)
                 return new KQMLPerformative((KQMLList)expr);
             else
+            {
+                _log.Error(
+                    $"ReadPerformative expected list, got {Inbuf.ToString()}");
                 throw new KQMLExpectedListException(Inbuf.ToString());
+            }
+
         }
     }
 }

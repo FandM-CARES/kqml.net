@@ -180,7 +180,6 @@ namespace KQML
             }
             if (!found)
             {
-                //line 181 and 183 of py, why add directly?
                 KQMLToken keyToken = new KQMLToken(keyword);
                 if (value is string)
                 {

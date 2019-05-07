@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Linq;
+using log4net;
 
 namespace KQML
 {
@@ -16,9 +17,11 @@ namespace KQML
         private int Counter;
         public string Name;
         public bool ShutdownIntiated;
+        private readonly static ILog _log = LogManager.GetLogger(typeof(KQMLDispatcher));
 
         public KQMLDispatcher(KQMLModule rec, KQMLReader inp, string agentName)
         {
+            _log.Debug("-----KQMLDispatcher ctor invoked-----");
             Receiver = rec;
             Reader = inp;
             ReplyContinuations = new Dictionary<string, string>();
@@ -33,7 +36,7 @@ namespace KQML
         {
             try
             {
-                while(!ShutdownIntiated)
+                while (!ShutdownIntiated)
                 {
                     KQMLPerformative msg = (KQMLPerformative)Reader.ReadPerformative();
                     DispatchMessage(msg);
@@ -42,16 +45,17 @@ namespace KQML
             }
             catch (EndOfStreamException)
             {
-                //TODO: Log
+                _log.Error("Received end-of-stream error");
                 Receiver.ReceiveEof();
             }
             catch (IOException e)
             {
+                _log.Error("Received I/O exception");
                 Receiver.HandleException(e);
             }
             catch (ArgumentException)
             {
-                //TODO: Log some more
+                _log.Error("Invalid argument in Start");
             }
             catch (Exception)
             {
@@ -62,20 +66,20 @@ namespace KQML
 
         public void Warn(string msg)
         {
-            throw new NotImplementedException();
-            // TODO: log
+            _log.Warn(msg);
         }
 
-        // FIXME: Add Reader.close
         public void Shutdown()
         {
+            _log.Debug($"-----KQMLDispatcher {Counter} shutting down-----");
             ShutdownIntiated = true;
-
+            Reader.Close();
         }
         private void DispatchMessage(KQMLPerformative msg)
         {
+            _log.Debug("Dispatching message with content \"" + msg.ToString() + "\"");
             string verb = msg.Head();
-            string replyId, value;  // type unclear  
+            string replyId;  // type unclear  
             if (string.IsNullOrEmpty(verb))
             {
                 Receiver.ReceiveMessageMissingVerb(msg);
@@ -94,12 +98,12 @@ namespace KQML
                 //}
                 //catch (KeyNotFoundException)
                 //{
-                //    // TODO: log
 
                 //}
             }
             string vl = verb.ToLower();
-            KQMLObject content = msg.Get("content");
+            KQMLPerformative content = (KQMLPerformative)msg.Get("content");
+
             List<string> contentMsgTypes = new List<string>{"ask-if", "ask-all", "ask-one", "stream-all",
                              "tell", "untell", "deny", "insert", "uninsert",
                              "delete-one", "delete-all", "undelete", "achieve",
@@ -124,8 +128,8 @@ namespace KQML
                 {
                     if (vl.Equals(cmt))
                     {
-                        Type thing = Receiver.GetType();
-                        MethodInfo method = thing.GetMethod(methodName);
+                        Type type = Receiver.GetType();
+                        MethodInfo method = type.GetMethod(methodName);
                         method.Invoke(Receiver, new object[] { msg, content });
 
                     }
@@ -138,7 +142,9 @@ namespace KQML
                 {
                     if (vl.Equals(cmt))
                     {
-                        //TODO: Invoke method reflexively
+                        Type type = Receiver.GetType();
+                        MethodInfo method = type.GetMethod(methodName);
+                        method.Invoke(Receiver, new object[] { msg });
                     }
                 }
             }
@@ -151,6 +157,8 @@ namespace KQML
         }
         public void AddReplyContinuation(string replyId, string cont)
         {
+
+            _log.Debug($"Adding replyId {replyId} with content \"{ cont} \"");
             ReplyContinuations[replyId.ToUpper()] = cont;
         }
     }
