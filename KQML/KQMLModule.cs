@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Net.Sockets;
 using System.Text;
 
 namespace KQML
@@ -17,18 +18,21 @@ namespace KQML
         public int Port;
         public bool IsApplication;
         public bool Testing;
-        public Socket Socket;
+        //public Socket Socket;
         public string Name;
         public bool ScanForPort;
         public bool Debug;
+
+        public StreamReader In;
+        public StreamWriter Out;
 
         public KQMLModule()
         {
             Host = "localhost";
             Port = 6200;
             IsApplication = false;
-            Testing = False;
-            Socket = null;
+            Testing = false;
+            //Socket = null;
             Debug = false;
 
             Dispatcher = null;
@@ -36,11 +40,18 @@ namespace KQML
             ReplyIdCounter = 1;
 
             //TODO: Neds to handle command line argument and change defaults
-        
-            if(!Testing) {
+            // JRW: Worry about that later
 
+            connect(Host, Port);
+                                   
+        }
 
-            }                        
+        private void connect(string host, int port)
+        {
+            TcpClient client = new TcpClient(host, port);
+            NetworkStream ns = client.GetStream();
+            In = new StreamReader(ns);
+            Out = new StreamWriter(ns);
         }
 
         public void ReceiveEof()
