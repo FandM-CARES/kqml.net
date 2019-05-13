@@ -18,12 +18,13 @@ namespace KQML
         public int Port;
         public bool IsApplication;
         public bool Testing;
-        public Socket Socket;
+        //public Socket Socket;
         public string Name;
         public bool ScanForPort;
         public bool Debug;
-        public StreamReader Out;
-        public KQMLReader Inp;
+
+        public StreamReader In;
+        public StreamWriter Out;
         public string GroupName;
 
         public KQMLModule()
@@ -32,44 +33,26 @@ namespace KQML
             Port = 6200;
             IsApplication = false;
             Testing = false;
-            Socket = null;
+            //Socket = null;
             Debug = false;
 
             Dispatcher = null;
             MAX_PORT_TRIES = 100;
             ReplyIdCounter = 1;
 
-            //TODO: Needs to handle command line argument and change defaults
-        
-            if(!Testing)
-            {
-                Out = null;
-                Inp = null;
-                //TODO: Log here
-                bool conn = Connect(Host, Port);
-                if(!conn)
-                {
-                    //TODO: Log error
-                    Exit(-1);
-                }
-                //UNDONE: use if to check for assert invariant
-               
-               
+            //TODO: Neds to handle command line argument and change defaults
+            // JRW: Worry about that later
 
-            }
-            else
-            {
-                //TODO: Using stdio connection
-                //UNDONE: what is this bytes stuff doing
-                //Maybe not put test code here at all 
-            }
-            Dispatcher = new KQMLDispatcher(this, Inp, Name);
-            Register();
+            connect(Host, Port);
+                                   
         }
 
-        private void Exit(int v)
+        private void connect(string host, int port)
         {
-            throw new NotImplementedException();
+            TcpClient client = new TcpClient(host, port);
+            NetworkStream ns = client.GetStream();
+            In = new StreamReader(ns);
+            Out = new StreamWriter(ns);
         }
 
         public void Start()
@@ -80,7 +63,7 @@ namespace KQML
 
         public void SubscribeRequest(string reqType)
         {
-            KQMLPerformative msg= new KQMLPerformative("subscribe");
+            KQMLPerformative msg = new KQMLPerformative("subscribe");
             KQMLList content = new KQMLList("request)");
             content.Append("&key");
             content.Set("content", KQMLList.FromString($"({reqType} . *)"));
@@ -97,48 +80,48 @@ namespace KQML
             msg.Set("content", content);
             Send(msg);
         }
-        public bool Connect(string host = null, int startPort = 0)
-        {
-            if (string.IsNullOrEmpty(host))
-                host = Host;
-            if (startPort == 0)
-                startPort = Port;
-            if (!ScanForPort)
-                return Connect1(host, startPort, true);
-            else
-            {
-                int maxtries = MAX_PORT_TRIES;
-                for (int port = startPort; port < startPort + MAX_PORT_TRIES; port++)
-                {
-                    bool conn = Connect1(host, port, false);
-                    if (conn)
-                        return true;
+        //public bool Connect(string host = null, int startPort = 0)
+        //{
+        //    if (string.IsNullOrEmpty(host))
+        //        host = Host;
+        //    if (startPort == 0)
+        //        startPort = Port;
+        //    if (!ScanForPort)
+        //        return Connect1(host, startPort, true);
+        //    else
+        //    {
+        //        int maxtries = MAX_PORT_TRIES;
+        //        for (int port = startPort; port < startPort + MAX_PORT_TRIES; port++)
+        //        {
+        //            bool conn = Connect1(host, port, false);
+        //            if (conn)
+        //                return true;
 
-                }
-                //TODO: Log error: failed to connect
-                return false;
-            }
-        }
+        //        }
+        //        //TODO: Log error: failed to connect
+        //        return false;
+        //    }
+        //}
 
-        private bool Connect1(string host, int port, bool verbose)
-        {
-            try
-            {
-                //Crreate Socket
-                Socket.Connect(host, port);
-                // TODO: Socket magic!
-                return true;
+        //private bool Connect1(string host, int port, bool verbose)
+        //{
+        //    try
+        //    {
+        //        //Crreate Socket
+        //        Socket.Connect(host, port);
+        //        // TODO: Socket magic!
+        //        return true;
 
-            }
-            catch (SocketException e)
-            {
-                if(verbose)
-                {
-                    //Log error with e
-                }
-                return false;
-            }
-        }
+        //    }
+        //    catch (SocketException e)
+        //    {
+        //        if (verbose)
+        //        {
+        //            //Log error with e
+        //        }
+        //        return false;
+        //    }
+        //}
 
         private void Send(KQMLPerformative msg)
         {
@@ -147,7 +130,7 @@ namespace KQML
 
         private void Register()
         {
-            if(!string.IsNullOrEmpty(Name))
+            if (!string.IsNullOrEmpty(Name))
             {
                 KQMLPerformative perf = new KQMLPerformative("register");
                 perf.Set("name", Name);
