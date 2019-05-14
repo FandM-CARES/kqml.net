@@ -46,7 +46,7 @@ namespace KQML
             catch (EndOfStreamException)
             {
                 _log.Error("Received end-of-stream error");
-                Receiver.ReceiveEof();
+                Receiver.receive_eof();
             }
             catch (IOException e)
             {
@@ -113,14 +113,15 @@ namespace KQML
                              "recommend-one", "recommend-all", "recruit-one",
                              "recruit-all", "reply", "request" };
             List<string> msgOnlyTypes = new List<string> { "eos", "error", "sorry", "ready", "next", "next", "rest", "discard", "unregister" };
-            string methodName = "Receive" +
-                string.Join("", vl.Split('_').Select((string str) => str.First().ToString().ToUpper() + str.Substring(1)));
+            //string methodName = "Receive" +
+            //    string.Join("", vl.Split('_').Select((string str) => str.First().ToString().ToUpper() + str.Substring(1)));
+            string methodName = "receive_" + vl.Replace('-', '_');
 
             if (contentMsgTypes.Contains(vl))
             {
                 if (content == null)
                 {
-                    Receiver.ReceiveMessageMissingContent(msg);
+                    Receiver.receive_message_missing_content(msg);
                     return;
                 }
 
@@ -150,7 +151,7 @@ namespace KQML
             }
             else
             {
-                Receiver.ReceiveOtherPerformative(msg);
+                Receiver.receive_other_performative(msg);
             }
 
             return;
