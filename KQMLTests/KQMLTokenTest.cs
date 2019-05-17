@@ -3,17 +3,19 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using KQML;
 using System.Collections.Generic;
 using log4net.Config;
+using log4net;
 
 namespace KQMLTests
 {
     [TestClass]
     public class KQMLTokenTest
     {
-        [TestInitialize]
-        public void setupLogging()
+
+        [AssemblyInitialize]
+        public static void Configure(TestContext tc)
         {
-            //XmlConfigurator.Configure();
             XmlConfigurator.Configure(new System.IO.FileInfo("logging.xml"));
+
         }
 
         [TestMethod]
