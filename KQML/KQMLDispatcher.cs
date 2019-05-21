@@ -113,9 +113,9 @@ namespace KQML
                              "recommend-one", "recommend-all", "recruit-one",
                              "recruit-all", "reply", "request" };
             List<string> msgOnlyTypes = new List<string> { "eos", "error", "sorry", "ready", "next", "next", "rest", "discard", "unregister" };
-            //string methodName = "Receive" +
-            //    string.Join("", vl.Split('_').Select((string str) => str.First().ToString().ToUpper() + str.Substring(1)));
-            string methodName = "receive_" + vl.Replace('-', '_');
+            string methodName = "Receive" +
+                string.Join("", vl.Split('_').Select((string str) => str.First().ToString().ToUpper() + str.Substring(1)));
+            //string methodName = "receive_" + vl.Replace('-', '_');
 
             if (contentMsgTypes.Contains(vl))
             {

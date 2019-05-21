@@ -1,4 +1,5 @@
-﻿using System;
+﻿using log4net;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text;
@@ -9,6 +10,8 @@ namespace KQML
     public class KQMLToken : KQMLObject
     {
         public string Data { get; }
+        private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
+
         public int Length
         {
             get { return Data.Length; }
@@ -71,6 +74,7 @@ namespace KQML
                 package = null;
                 bareName = Data;
             }
+            _log.Debug($"package: {package}, bareName: {bareName}");
             return new List<string> { package, bareName };
         }
 
