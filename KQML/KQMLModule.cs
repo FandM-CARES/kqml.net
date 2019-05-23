@@ -32,7 +32,7 @@ namespace KQML
         public KQMLModule()
         {
             Host = "localhost";
-            Port = 6200;
+            Port = 9000;
             IsApplication = false;
             Testing = false;
             //Socket = null;
@@ -134,12 +134,21 @@ namespace KQML
         //    }
         //}
 
-        private void Send(KQMLPerformative msg)
+        public void Send(KQMLPerformative msg)
         {
-            throw new NotImplementedException();
+            try
+            {
+                msg.Write(Out);
+            }
+            catch (IOException)
+            {
+                Out.Write("\n");
+                Out.Flush();
+                
+            }
         }
 
-        private void Register()
+        public void Register()
         {
             if (!string.IsNullOrEmpty(Name))
             {
