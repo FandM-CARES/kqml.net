@@ -35,6 +35,8 @@ namespace KQML
             Port = 9000;
             IsApplication = false;
             Testing = false;
+            Name = "secret-agent";
+            GroupName = "(secrets)";
             //Socket = null;
             Debug = false;
 
@@ -48,7 +50,7 @@ namespace KQML
 
             
             Connect(Host, Port);
-            Dispatcher = new KQMLDispatcher(this, new KQMLReader(In), "secret-agent");
+            Dispatcher = new KQMLDispatcher(this, new KQMLReader(In), "secret-dispatch");
             Register();
 
 

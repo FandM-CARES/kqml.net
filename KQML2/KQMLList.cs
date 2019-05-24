@@ -37,7 +37,7 @@ namespace KQML
                     Append(o);
             }
         }
-        //this is here becuase apparently this case does not call the List of objects constructor
+        //this is here because apparently this case does not call the List of objects constructor
         public KQMLList(List<KQMLObject> list)
         {
             Data = new List<KQMLObject>();
@@ -69,10 +69,7 @@ namespace KQML
             {
                 if (obj.ToString().ToUpper().Equals(keyword.ToUpper()))
                 {
-                    if (i < Data.Count - 1)
-                        return Data[i + 1];
-                    else
-                        return null;
+                    return i < Data.Count - 1 ? Data[i + 1] : null;
                 }
                 ++i;
             }
@@ -84,7 +81,7 @@ namespace KQML
             if (!param.Equals(null))
             {
                 return param.ToString();
-                //using ToString instead of StringValue because not all implementations of KQMLOjbect has StringValue
+                //using ToString instead of StringValue because not all implementations of KQMLObject has StringValue
             }
             return null;
         }
@@ -104,16 +101,14 @@ namespace KQML
         }
         public void Push(object obj)
         {
-            if (obj is string)
+            if (obj is string str)
             {
-                string str = (string)obj;
                 KQMLToken kqml = new KQMLToken(str);
                 Data.Insert(0, kqml);
 
             }
-            else if (obj is KQMLObject)
+            else if (obj is KQMLObject kqml)
             {
-                KQMLObject kqml = (KQMLObject)obj;
                 Data.Insert(0, kqml);
             }
 
@@ -121,16 +116,14 @@ namespace KQML
 
         public void InsertAt(int index, object obj)
         {
-            if (obj is string)
+            if (obj is string str)
             {
-                string str = (string)obj;
                 KQMLToken kqml = new KQMLToken(str);
                 Data.Insert(index, kqml);
 
             }
-            else if (obj is KQMLObject)
+            else if (obj is KQMLObject kqml)
             {
-                KQMLObject kqml = (KQMLObject)obj;
                 Data.Insert(index, kqml);
             }
 
@@ -196,11 +189,18 @@ namespace KQML
             }
 
         }
-        public void Write()
+
+        public void Write(TextWriter output)
         {
-            throw new NotImplementedException();
+            string fullString = "(" + string.Join(" ", Data.Select(element => element.ToString())) + ")";
+            output.Write(fullString);
         }
  
+        /// <summary>
+        /// Factory Method to create KQMLList from a string. Calls KQMLReader.ReadList
+        /// </summary>
+        /// <param name="s">String used to generate list</param>
+        /// <returns>Returns a KQMLList</returns>
         public static KQMLList FromString(string s)
         {
             if (s != null)
@@ -218,8 +218,7 @@ namespace KQML
                 }
                 finally
                 {
-                    if (sreader != null)
-                        sreader.Dispose();
+                    sreader?.Dispose();
                 }
             }
             return null;

@@ -55,17 +55,23 @@ namespace KQML
             return false;
 
         }
+
+        /// <summary>
+        /// Checks if a token is a char.
+        /// </summary>
+        /// <param name="ch">char to be checked</param>
+        /// <returns>Returns false for empty or '`\"#(), otherwise returns true</returns>
         public static bool IsTokenChar(char ch)
         {
             string nonTokenChars = "'`\"#()";
-            if (!(string.IsNullOrEmpty(ch.ToString())) && nonTokenChars.Contains(ch))
-                return true;
-            return false;
+            if (char.IsWhiteSpace(ch) || nonTokenChars.Contains(ch))
+                return false;
+            return true;
         }
 
         public KQMLObject ReadExpr(bool backquoted = false)
         {
-            _log.Debug("Reading Expression from" + Reader.ToString());
+            _log.Debug("Reading Expression from " + Reader.ToString());
 
             char ch = (char)Reader.Peek();
             if (ch == '\'' || ch == '`')
@@ -92,7 +98,6 @@ namespace KQML
                     return ReadToken();
                 else
                 {
-                    
                     ch = ReadChar();
                     _log.Error("Not a character: " + Inbuf.ToString());
                     throw new KQMLBadCharacterException(Inbuf.ToString());
@@ -132,10 +137,7 @@ namespace KQML
         public KQMLString ReadString()
         {
             char ch = ReadChar();
-            if (ch == '"')
-                return ReadQuotedString();
-            else
-                return ReadHashedString();
+            return ch == '"' ? ReadQuotedString() : ReadHashedString();
         }
 
         private KQMLString ReadHashedString()
@@ -181,16 +183,18 @@ namespace KQML
                 ch = ReadChar();
                 if (ch == '"')
                     break;
+                // If it is a slash, check next character
                 if (ch == '\\')
                 {
                     ch = ReadChar();
                     if (ch == '\\')
                     {
+                        // It is another slash, preserve both slashes
                         Inbuf.Append("\\\\");
                         continue;
                     }
                 }
-                Inbuf.Append(ch);
+                buf.Append(ch);
             }
             return new KQMLString(buf.ToString());
         }
@@ -218,6 +222,8 @@ namespace KQML
                     break;
                 lst.Append(ReadExpr(backquoted));
                 ch = (char)Reader.Peek();
+                if (ch == -1)
+                    return lst;
                 if (ch != ')')
                 {
                     if (ch != '(')
