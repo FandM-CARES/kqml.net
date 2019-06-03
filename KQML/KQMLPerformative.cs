@@ -9,7 +9,7 @@ namespace KQML
     public class KQMLPerformative : KQMLObject
     {
         public KQMLList Data { get; }
-        public int Count { get { return Data.Count; } }
+        public int Count => Data.Count;
 
         public KQMLPerformative(KQMLList objects)
         {

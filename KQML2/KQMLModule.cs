@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
+using log4net;
 
 namespace KQML
 {
-    class KQMLModule
+    public class KQMLModule
     {
         public Dictionary<object, object> defaults;
 
@@ -28,6 +28,9 @@ namespace KQML
         public StreamWriter Out;
         public string GroupName;
         public bool Running;
+
+        //Log log log
+        private readonly ILog _log = LogManager.GetLogger(typeof(KQMLModule));
 
         public KQMLModule()
         {
@@ -71,9 +74,11 @@ namespace KQML
             while (Running)
             {
                 ConsoleKeyInfo input = Console.ReadKey();
-                if (input.KeyChar.Equals('Q'))
+                if (input.KeyChar=='Q')
                 {
+                    Console.WriteLine("Received shutdown signal...");
                     Dispatcher.Shutdown();
+                    Console.WriteLine("Dispatcher shutdown");
                     Running = false;
                 }
             }
@@ -82,7 +87,7 @@ namespace KQML
         public void SubscribeRequest(string reqType)
         {
             KQMLPerformative msg = new KQMLPerformative("subscribe");
-            KQMLList content = new KQMLList("request)");
+            KQMLList content = new KQMLList("request");
             content.Append("&key");
             content.Set("content", KQMLList.FromString($"({reqType} . *)"));
             msg.Set("content", content);
@@ -116,7 +121,6 @@ namespace KQML
         //                return true;
 
         //        }
-        //        //TODO: Log error: failed to connect
         //        return false;
         //    }
         //}
@@ -144,17 +148,21 @@ namespace KQML
         {
             try
             {
+                Console.WriteLine("Attempting to write: " + msg);
                 msg.Write(Out);
+                Out.Write('\n');
+                Out.Flush();
             }
             catch (IOException)
             {
+                Console.WriteLine("Write failed");
                 Out.Write("\n");
                 Out.Flush();
                 
             }
         }
 
-        public void Register()
+        public virtual void Register()
         {
             if (!string.IsNullOrEmpty(Name))
             {
@@ -173,7 +181,7 @@ namespace KQML
                     }
                     catch (IOException)
                     {
-                        //log error
+                        //TODO: Log errors!
                     }
                 }
                 Send(perf);
@@ -363,6 +371,10 @@ namespace KQML
         static void Main(string[] args)
         {
             KQMLModule module = new KQMLModule();
+            module.Ready();
+            module.SubscribeRequest("chicken");
+            module.SubscribeTell("egg");
+
             module.Start();
         }
 

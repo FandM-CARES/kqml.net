@@ -2,13 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-using System.Text;
 using System.Linq;
 using log4net;
 
 namespace KQML
 {
-    class KQMLDispatcher
+    public class KQMLDispatcher
     {
         public KQMLModule Receiver;
         public KQMLReader Reader;
@@ -57,11 +56,11 @@ namespace KQML
             {
                 _log.Error("Invalid argument in Start");
             }
-            catch (Exception)
+            catch (Exception e)
             {
-                Console.Write("I dont't know how to handle keyboard interrupts");   //TODO: keyboard interrupt?
-
+                _log.Error("Start: unknown error " + e);
             }
+            // Keyboard interrupt handled in module
         }
 
         public void Warn(string msg)
@@ -77,7 +76,7 @@ namespace KQML
         }
         private void DispatchMessage(KQMLPerformative msg)
         {
-            _log.Debug("Dispatching message with content \"" + msg.ToString() + "\"");
+            _log.Debug("Dispatching message with content \"" + msg + "\"");
             string verb = msg.Head();
             string replyId;  // type unclear  
             if (string.IsNullOrEmpty(verb))
@@ -131,8 +130,7 @@ namespace KQML
                     {
                         Type type = Receiver.GetType();
                         MethodInfo method = type.GetMethod(methodName);
-                        method.Invoke(Receiver, new object[] { msg, content });
-
+                        if (method != null) method.Invoke(Receiver, new object[] {msg, content});
                     }
 
                 }

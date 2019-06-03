@@ -69,8 +69,8 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KQML2\KQML.csproj">
-      <Project>{083a99db-4d84-4132-94c9-c2e595825b25}</Project>
+    <ProjectReference Include="..\KQML\KQML.csproj">
+      <Project>{209c63f6-9b11-4016-a4e1-95374d1434bb}</Project>
       <Name>KQML</Name>
     </ProjectReference>
   </ItemGroup>
