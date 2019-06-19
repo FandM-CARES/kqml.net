@@ -43,6 +43,11 @@ namespace Companions
 
         }
 
+        public override void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
+        {
+            string pred = content.Head();
+        }
+
         public void ReceiveTell(KQMLPerformative msg, string content)
         {
             KQMLPerformative replyMsg = new KQMLPerformative("tell");
