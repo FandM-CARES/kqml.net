@@ -45,14 +45,14 @@ namespace Companions
 
         public override void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
         {
-            string pred = content.Head();
+            //string pred = content.Head();
         }
 
-        public void ReceiveTell(KQMLPerformative msg, string content)
+        public override void ReceiveTell(KQMLPerformative msg, KQMLObject content)
         {
             KQMLPerformative replyMsg = new KQMLPerformative("tell");
             replyMsg.Set("sender", Name);
-            replyMsg.Set("content", null);
+            replyMsg.Set("content", ":OK");
             Reply(msg, replyMsg);
         }
 

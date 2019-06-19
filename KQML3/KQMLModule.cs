@@ -209,7 +209,7 @@ namespace KQML
 
         public void HandleException(IOException e)
         {
-            throw new NotFiniteNumberException();
+            //throw new NotFiniteNumberException();
         }
 
         public void ReceiveMessageMissingVerb(KQMLPerformative msg)
@@ -227,12 +227,12 @@ namespace KQML
         public void Reply(KQMLPerformative msg, KQMLPerformative replyMsg)
         {
             KQMLObject sender = msg.Get("sender");
-            if (!sender.Equals(null))
+            if (sender != null)
             {
                 replyMsg.Set("Receiver", sender);
             }
             KQMLObject replyWith = msg.Get("reply-with");
-            if (!replyWith.Equals(null))
+            if (replyWith != null)
             {
                 replyMsg.Set("in-reply-to", replyWith);
             }
@@ -254,7 +254,7 @@ namespace KQML
             ErrorReply(msg, "unexpected performative: ask-all"); 
         }
 
-        public override void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
         {
              ErrorReply(msg, "unexpected performative: ask-one"); 
         }
@@ -265,8 +265,10 @@ namespace KQML
 
         }
 
-        //public void Receive_tell(KQMLPerformative msg, string content)
-        //    // logger.error("unexpected performative: tell");
+        public virtual void ReceiveTell(KQMLPerformative msg, KQMLObject content)
+        {
+            ErrorReply(msg, "unexpected performative: stream-all");
+        }
 
         public void ReceiveUntell(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: untell"); }

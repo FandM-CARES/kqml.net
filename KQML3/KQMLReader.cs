@@ -28,7 +28,16 @@ namespace KQML
         {
             if (Reader != null)
             {
-                Reader.ReadToEnd();
+                try
+                {
+                    Reader.ReadToEnd();
+                }
+                catch (IOException e)
+                {
+                    // connection may be closed before reading to end.
+                    // that's fine, just move on
+                    _log.Debug("Connection may have been closed before reading to end");
+                }
                 Reader.Dispose();
                 _log.Debug("KQMLReader closed");
             }
