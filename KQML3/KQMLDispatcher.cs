@@ -101,7 +101,7 @@ namespace KQML
                 //}
             }
             string vl = verb.ToLower();
-            KQMLPerformative content = (KQMLPerformative)msg.Get("content");
+            KQMLObject content = msg.Get("content");
 
             List<string> contentMsgTypes = new List<string>{"ask-if", "ask-all", "ask-one", "stream-all",
                              "tell", "untell", "deny", "insert", "uninsert",
