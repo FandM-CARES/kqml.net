@@ -12,10 +12,7 @@ namespace KQML
         public string Data { get; }
         private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
 
-        public int Length
-        {
-            get { return Data.Length; }
-        }
+        public int Length => Data.Length;
 
         public KQMLToken(string s = "")
         {

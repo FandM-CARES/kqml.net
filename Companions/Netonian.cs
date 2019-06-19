@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
 using System.Linq;
+using System.Management.Instrumentation;
 using System.Net;
 using System.Text;
 
@@ -45,7 +46,30 @@ namespace Companions
 
         public override void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
         {
-            //string pred = content.Head();
+            if (!(content is KQMLList))
+                throw new ArgumentException("content not a KQMLList");
+            KQMLList contentList = (KQMLList)content;
+            string pred = contentList.Head();
+            // find all bounded arguments
+            List<KQMLObject> bounded = new List<KQMLObject>();
+            foreach (var element in contentList.Data)
+            {
+                if (element is KQMLString)
+                {
+                    KQMLString elementString = (KQMLString)element;
+                    if (elementString[0] != '?')
+                        bounded.Append(elementString);
+                }
+                else if (element is KQMLToken)
+                {
+                    KQMLToken elementToken = (KQMLToken)element;
+                    if (elementToken[0] != '?')
+                        bounded.Append(elementToken);
+                }
+            }
+            // query with those arguments
+            Asks
+
         }
 
         public override void ReceiveTell(KQMLPerformative msg, KQMLObject content)
@@ -79,7 +103,7 @@ namespace Companions
             int years = now.Year - StartTime.Year;
             int months, days, hours, seconds, minutes;
             List<int> longMonths = new List<int> { 1, 3, 5, 7, 8, 10, 12 };
-            List<int> shortMonths = new List<int> {4, 6, 9, 11};
+            List<int> shortMonths = new List<int> { 4, 6, 9, 11 };
             // months
             if (now.Year == StartTime.Year)
                 months = now.Month - StartTime.Month;
@@ -96,7 +120,7 @@ namespace Companions
             else if (shortMonths.Contains(now.Month))
                 days = 30 - StartTime.Day + now.Day;
             else
-                days = 29 - StartTime.Day + now.Day; 
+                days = 29 - StartTime.Day + now.Day;
 
             //Hours 
             if (StartTime.Day == now.Day)
