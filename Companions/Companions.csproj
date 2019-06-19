@@ -77,8 +77,8 @@
     </BootstrapperPackage>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\KQML\KQML.csproj">
-      <Project>{209c63f6-9b11-4016-a4e1-95374d1434bb}</Project>
+    <ProjectReference Include="..\KQML3\KQML.csproj">
+      <Project>{10d1176e-f22d-489e-95d2-08a2e6566968}</Project>
       <Name>KQML</Name>
     </ProjectReference>
   </ItemGroup>

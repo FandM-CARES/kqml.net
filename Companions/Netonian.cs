@@ -13,7 +13,7 @@ namespace Companions
     {
         public DateTime StartTime;
         public int LocalPort;
-        public string Name;
+        // public string Name;
         public Netonian() : base()
         {
             LocalPort = 8950;
@@ -37,6 +37,8 @@ namespace Companions
         public void Listen()
         {
             //TODO: Concurrent threading
+
+
 
 
         }
@@ -114,7 +116,7 @@ namespace Companions
             {
                 seconds = 60 - StartTime.Second + now.Second;
             }
-            return $"({years} {months} {days} {hours} {months} {days})";
+            return $"({years} {months} {days} {hours} {minutes} {seconds})";
 
         }
 
