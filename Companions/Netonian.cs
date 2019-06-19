@@ -13,7 +13,7 @@ namespace Companions
     {
         public DateTime StartTime;
         public int LocalPort;
-        public string Name;
+        
         public Netonian() : base()
         {
             LocalPort = 8950;
