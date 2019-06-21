@@ -39,9 +39,6 @@ namespace KQML
             return Data;
         }
 
-        public char this[int i]
-        {
-            get { return Data[i]; }
-        }
+        public char this[int i] => Data[i];
     }
 }

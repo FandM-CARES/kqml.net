@@ -1,25 +1,26 @@
 ﻿using KQML;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
+using System.IO;
 using System.Linq;
-using System.Management.Instrumentation;
 using System.Net;
-using System.Text;
-
+using System.Net.Sockets;
 
 namespace Companions
 {
+    public delegate List<object> AskDelegate(params object[] arguments);
     public class Netonian : KQMLModule
     {
         public DateTime StartTime;
         public int LocalPort;
+        public Dictionary<string, AskDelegate> Asks;
 
-        public Netonian() : base()
+        public Netonian()
         {
             LocalPort = 8950;
             StartTime = DateTime.Now;
-
+            Asks = new Dictionary<string, AskDelegate>();
+            Listen();
         }
         public override void Register()
         {
@@ -35,42 +36,116 @@ namespace Companions
             }
         }
 
+        /// <summary>
+        /// Adds name-function mapping to Asks. 
+        /// </summary>
+        /// <param name="name">The name of the function</param>
+        /// <param name="function">The function as an AskDelegate</param>
+        public void AddAsk(string name, AskDelegate function)
+        {
+            Asks.Add(name, function);
+        }
+
         public void Listen()
         {
-            //TODO: Concurrent threading
+            TcpListener server = new TcpListener(IPAddress.Parse("127.0.0.1"), LocalPort);
+            server.Start();
 
+            while (Running)
+            {
+                TcpClient client = server.AcceptTcpClient();
 
-
-
+                NetworkStream ns = client.GetStream();
+                StreamReader sr = new StreamReader(ns);
+                KQMLReader reader = new KQMLReader(sr);
+                Dispatcher.Reader = reader;
+            }
         }
 
         public override void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
         {
-            if (!(content is KQMLList))
+            if (!(content is KQMLList contentList))
                 throw new ArgumentException("content not a KQMLList");
-            KQMLList contentList = (KQMLList)content;
             string pred = contentList.Head();
             // find all bounded arguments
             List<KQMLObject> bounded = new List<KQMLObject>();
             foreach (var element in contentList.Data)
             {
-                if (element is KQMLString)
+                if (element is KQMLString elementString)
                 {
-                    KQMLString elementString = (KQMLString)element;
                     if (elementString[0] != '?')
                         bounded.Append(elementString);
                 }
-                else if (element is KQMLToken)
+                else if (element is KQMLToken elementToken)
                 {
-                    KQMLToken elementToken = (KQMLToken)element;
                     if (elementToken[0] != '?')
                         bounded.Append(elementToken);
                 }
+
             }
             // query with those arguments
-            Asks
+            AskDelegate del = Asks[pred];
+
+            // using KQMLObject because I really have no idea what types we are getting here lol
+            var results = del(bounded);
+            KQMLObject respType = msg.Get("response");
+            RespondToQuery(msg, contentList, results, respType);
 
         }
+
+        public override void ReceiveOtherPerformative(KQMLPerformative msg)
+        {
+            if (msg.Head() == "ping")
+                ReceivePing(msg);
+            else
+            {
+                ErrorReply(msg, $"unexpected performative: {msg}");
+
+            }
+        }
+
+        public void RespondToQuery(KQMLPerformative msg, KQMLList content, object results, KQMLObject respType)
+        {
+            // ReSharper disable once SuspiciousTypeConversion.Global
+            if (respType == null || respType.Equals(":pattern"))
+                RespondWithPattern(msg, content, results);
+            else
+            {
+                RespondWithBindings(msg, content, results);
+            }
+        }
+
+        public void RespondWithPattern(KQMLPerformative msg, KQMLList content, object results)
+        {
+            //KQMLList replyContent = new KQMLList(content.Head());
+            //List<object> resultsList = (results is List<object> list) ? 
+            //    list : new List<object>(){results};
+            //int resultIndex = 0;
+            //int resultLength = resultsList.Count - 1;
+
+            //// pythonian: len(content.data[1:]
+            //int argLength = content.Count - 1;
+            //for (int i = 0; i <= argLength; i++)
+            //{
+            //    // if(content.Data[0] is KQMLToken token || content.Data[0] is KQMLString )
+            //    if(i == argLength && resultIndex < resultLength)
+            //        replyContent.Append(Listify(resultsList.Skip(resultIndex - 1)));
+            //}
+
+            throw new NotImplementedException();
+        }
+
+        public object Listify(object results)
+        {
+            throw new NotImplementedException();
+        }
+
+        public void RespondWithBindings(KQMLPerformative msg, KQMLList content, object results)
+        {
+            throw new NotImplementedException();
+        }
+
+
 
         public override void ReceiveTell(KQMLPerformative msg, KQMLObject content)
         {

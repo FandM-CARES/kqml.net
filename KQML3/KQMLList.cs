@@ -46,13 +46,7 @@ namespace KQML
                 Append(o);
             }
         }
-        public KQMLObject this[int i]
-        {
-            get
-            {
-                return Data[i];
-            }
-        }
+        public KQMLObject this[int i] => Data[i];
 
         public string Head()
         {

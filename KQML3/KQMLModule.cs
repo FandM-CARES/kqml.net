@@ -366,7 +366,7 @@ namespace KQML
         //public void Receive_unregister(KQMLPerformative msg)
         // logger.error(msg, "unexpected performative: unregister");
 
-        public void ReceiveOtherPerformative(KQMLPerformative msg)
+        public virtual void ReceiveOtherPerformative(KQMLPerformative msg)
         { ErrorReply(msg, "unexpected performative: " + msg.ToString()); }
 
 

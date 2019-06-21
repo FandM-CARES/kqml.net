@@ -16,7 +16,7 @@ namespace KQML
         private int Counter;
         public string Name;
         public bool ShutdownIntiated;
-        private readonly static ILog _log = LogManager.GetLogger(typeof(KQMLDispatcher));
+        private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLDispatcher));
 
         public KQMLDispatcher(KQMLModule rec, KQMLReader inp, string agentName)
         {
