@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -32,7 +33,7 @@ namespace KQML
                 {
                     Reader.ReadToEnd();
                 }
-                catch (IOException e)
+                catch (IOException)
                 {
                     // connection may be closed before reading to end.
                     // that's fine, just move on
@@ -284,8 +285,8 @@ namespace KQML
             SkipWhitespace();
             Inbuf = new StringBuilder();
             KQMLObject expr = ReadExpr();
-            if (expr is KQMLList)
-                return new KQMLPerformative((KQMLList)expr);
+            if (expr is KQMLList exprList)
+                return KQMLPerformative.ListToPerformative(exprList);
             else
             {
                 _log.Error(

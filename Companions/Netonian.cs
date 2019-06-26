@@ -202,8 +202,8 @@ namespace Companions
         public void RespondWithPattern(KQMLPerformative msg, KQMLList content, object results)
         {
             //KQMLList replyContent = new KQMLList(content.Head());
-            //List<object> resultsList = (results is List<object> list) ? 
-            //    list : new List<object>(){results};
+            //List<object> resultsList = (results is List<object> list) ?
+            //    list : new List<object>() { results };
             //int resultIndex = 0;
             //int resultLength = resultsList.Count - 1;
 
@@ -211,9 +211,15 @@ namespace Companions
             //int argLength = content.Count - 1;
             //for (int i = 0; i <= argLength; i++)
             //{
+                
             //    // if(content.Data[0] is KQMLToken token || content.Data[0] is KQMLString )
-            //    if(i == argLength && resultIndex < resultLength)
+            //    if (i == argLength && resultIndex < resultLength)
             //        replyContent.Append(Listify(resultsList.Skip(resultIndex - 1)));
+            //    else
+            //    {
+            //        replyContent.Append(Listify(resultsList[resultIndex]));
+            //        resultIndex += 1;
+            //    }
             //}
 
             throw new NotImplementedException();
@@ -373,6 +379,8 @@ namespace Companions
 
         static void Main(string[] args)
         {
+            // TODO: Log look at token test for reference
+
             Netonian net = new Netonian();
             net.Start();
         }

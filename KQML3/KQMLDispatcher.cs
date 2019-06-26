@@ -4,6 +4,7 @@ using System.IO;
 using System.Reflection;
 using System.Linq;
 using log4net;
+using KQML.KQMLExceptions;
 
 namespace KQML
 {
@@ -39,7 +40,6 @@ namespace KQML
                 {
                     KQMLPerformative msg = (KQMLPerformative)Reader.ReadPerformative();
                     DispatchMessage(msg);
-                    // FIXME: not handling KQMLException
                 }
             }
             catch (EndOfStreamException)
@@ -56,10 +56,15 @@ namespace KQML
             {
                 _log.Error("Invalid argument in Start");
             }
+            catch (KQMLExpectedListException e)
+            {
+                _log.Error("ReadPerformative failed. Expected a list");
+            }
             catch (Exception e)
             {
                 _log.Error("Start: unknown error " + e);
             }
+
             // Keyboard interrupt handled in module
         }
 
@@ -130,7 +135,7 @@ namespace KQML
                     {
                         Type type = Receiver.GetType();
                         MethodInfo method = type.GetMethod(methodName);
-                        if (method != null) method.Invoke(Receiver, new object[] {msg, content});
+                        if (method != null) method.Invoke(Receiver, new object[] { msg, content });
                     }
 
                 }
