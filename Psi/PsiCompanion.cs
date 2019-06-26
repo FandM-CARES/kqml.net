@@ -5,17 +5,18 @@ using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Psi;
 using Microsoft.Psi.Components;
+using Companions;
 
 namespace KQML
 {
-    public class PsiKQML<TIn,TOut>: KQMLModule 
+    public class PsiCompanion<TIn,TOut>: Netonian 
     {
 
         public Receiver<TIn> PIn { get; }
 
         public Emitter<TOut> POut { get; }
 
-        public PsiKQML(Pipeline pipeline)
+        public PsiCompanion(Pipeline pipeline)
         {
             this.POut = pipeline.CreateEmitter<TOut>(this, nameof(this.Out));
             this.PIn = pipeline.CreateReceiver<TIn>(this, this.Receive, nameof(this.In));
@@ -37,6 +38,7 @@ namespace KQML
 
         public override void ReceiveTell(KQMLPerformative msg, KQMLObject content)
         {
+            Console.Out.WriteLine(content.ToString());
             POut.Post((TOut)content, DateTime.Now);
         }
 
