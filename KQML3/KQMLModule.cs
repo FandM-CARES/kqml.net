@@ -84,7 +84,7 @@ namespace KQML
             //    }
             //}
 
-            Dispatcher.Start();
+             Dispatcher.Start();
         }
 
         public void SubscribeRequest(string reqType)

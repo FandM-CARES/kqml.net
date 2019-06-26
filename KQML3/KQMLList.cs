@@ -8,7 +8,7 @@ namespace KQML
 {
     public class KQMLList : KQMLObject
     {
-        public List<KQMLObject> Data { get; }
+        public List<KQMLObject> Data { get; set; }
         public int Count { get { return Data.Count; } }
 
         public KQMLList()
