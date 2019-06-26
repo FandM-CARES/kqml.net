@@ -2,17 +2,14 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Text;
 using System.Text.RegularExpressions;
 
 namespace KQML
 {
-    public class KQMLToken : KQMLObject
+    public class KQMLToken : KQMLString
     {
-        public string Data { get; }
         private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
 
-        public int Length => Data.Length;
 
         public KQMLToken(string s = "")
         {
@@ -27,11 +24,6 @@ namespace KQML
         public string Upper()
         {
             return Data.ToUpper();
-        }
-
-        public void Write(StreamWriter stream) 
-        {
-            stream.Write(Data);
         }
 
         override public string ToString()
@@ -123,10 +115,11 @@ namespace KQML
                 throw new ArgumentException("obj must be string or KQMLToken");
         }
 
-        public char this[int i]
-        {
-            get { return Data[i]; }
+        
 
+        public override int GetHashCode()
+        {
+            return Data.GetHashCode();
         }
     }
 }

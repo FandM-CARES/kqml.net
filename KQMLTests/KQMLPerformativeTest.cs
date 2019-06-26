@@ -22,7 +22,7 @@ namespace KQMLTests
        */
             List<object> strings = new List<object> { "a", ":b", "c" };
             KQMLList klist = new KQMLList(strings);
-            kp = new KQMLPerformative(klist);
+            kp = KQMLPerformative.ListToPerformative(klist);
 
         }
         /*  kp = KQMLPerformative('tell')
@@ -44,7 +44,7 @@ namespace KQMLTests
         public void GetTest()
         {
             List<object> lst = new List<object> { "tell", ":content", new KQMLList(new List<object> { "success" }) };
-            KQMLPerformative kp = new KQMLPerformative(new KQMLList(lst));
+            KQMLPerformative kp = KQMLPerformative.ListToPerformative(new KQMLList(lst));
             KQMLList success = new KQMLList(new List<object> { "success" });
             Assert.IsTrue(kp.Get("content") is KQMLList);
         }
@@ -54,7 +54,7 @@ namespace KQMLTests
         public void BadPerformativeTest()
         {
             List<object> lst = new List<object> { "achieve", "chicken" };
-            KQMLPerformative kp = new KQMLPerformative(new KQMLList(lst));
+            KQMLPerformative kp = KQMLPerformative.ListToPerformative(new KQMLList(lst));
         
         }
 
@@ -62,7 +62,7 @@ namespace KQMLTests
         public void SetTest()
         {
             List<object> lst = new List<object> { "tell", ":content", new KQMLList(new List<object> { "success" }) };
-            KQMLPerformative kp = new KQMLPerformative(new KQMLList(lst));
+            KQMLPerformative kp = KQMLPerformative.ListToPerformative(new KQMLList(lst));
             KQMLToken newVal = new KQMLToken("value");
             kp.Set(":content", newVal);
             Assert.AreEqual(newVal, kp.Data[2]);
