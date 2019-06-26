@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq.Expressions;
 using System.Net.Sockets;
 using System.Threading;
 using log4net;
@@ -69,19 +70,21 @@ namespace KQML
 
         public void Start()
         {
-            Thread t = new Thread(new ThreadStart(Dispatcher.Start));
-            t.Start();
-            while (Running)
-            {
-                ConsoleKeyInfo input = Console.ReadKey();
-                if (input.KeyChar=='Q')
-                {
-                    Console.WriteLine("Received shutdown signal...");
-                    Dispatcher.Shutdown();
-                    Console.WriteLine("Dispatcher shutdown");
-                    Running = false;
-                }
-            }
+            //Thread t = new Thread(new ThreadStart(Dispatcher.Start));
+            //t.Start();
+            //while (Running)
+            //{
+            //    ConsoleKeyInfo input = Console.ReadKey();
+            //    if (input.KeyChar=='Q')
+            //    {
+            //        Console.WriteLine("Received shutdown signal...");
+            //        Dispatcher.Shutdown();
+            //        Console.WriteLine("Dispatcher shutdown");
+            //        Running = false;
+            //    }
+            //}
+
+            Dispatcher.Start();
         }
 
         public void SubscribeRequest(string reqType)
@@ -152,6 +155,7 @@ namespace KQML
                 msg.Write(Out);
                 Out.Write('\n');
                 Out.Flush();
+                Console.WriteLine("written!");
             }
             catch (IOException)
             {
@@ -202,7 +206,7 @@ namespace KQML
         }
 
 
-        public void ReceiveEof()
+        public virtual void ReceiveEof()
         {
             Exit(0);
         }
@@ -239,17 +243,17 @@ namespace KQML
             Send(replyMsg);
         }
 
-        public void ReceiveMessageMissingContent(KQMLPerformative msg)
+        public virtual void ReceiveMessageMissingContent(KQMLPerformative msg)
         {
              ErrorReply(msg, "missing content in performative"); 
         }
 
-        public void ReceiveAskIf(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveAskIf(KQMLPerformative msg, KQMLObject content)
         {
             ErrorReply(msg, "unexpected performative: ask-if"); 
         }
 
-        public void ReceiveAskAll(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveAskAll(KQMLPerformative msg, KQMLObject content)
         {
             ErrorReply(msg, "unexpected performative: ask-all"); 
         }
@@ -259,7 +263,7 @@ namespace KQML
              ErrorReply(msg, "unexpected performative: ask-one"); 
         }
 
-        public void ReceiveStreamAll(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveStreamAll(KQMLPerformative msg, KQMLObject content)
         {
             ErrorReply(msg, "unexpected performative: stream-all"); 
 
@@ -270,79 +274,79 @@ namespace KQML
             ErrorReply(msg, "unexpected performative: stream-all");
         }
 
-        public void ReceiveUntell(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveUntell(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: untell"); }
 
-        public void ReceiveDeny(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveDeny(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: deny"); }
 
-        public void ReceiveInsert(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveInsert(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: insert"); }
 
-        public void ReceiveUninsert(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveUninsert(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: uninsert"); }
 
-        public void ReceiveDeleteOne(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveDeleteOne(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: delete-one"); }
 
-        public void ReceiveDeleteAll(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveDeleteAll(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: delete-all"); }
 
-        public void ReceiveUndelete(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveUndelete(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: undelete"); }
 
-        public void ReceiveAchieve(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveAchieve(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: achieve"); }
 
-        public void ReceiveAdvertise(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveAdvertise(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: advertise"); }
 
-        public void ReceiveUnadvertise(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveUnadvertise(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: unadvertise"); }
 
-        public void ReceiveSubscribe(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveSubscribe(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: subscribe"); }
 
-        public void ReceiveStandby(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveStandby(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: standby"); }
 
-        public void ReceiveRegister(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveRegister(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: register"); }
 
-        public void ReceiveForward(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveForward(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: forward"); }
 
-        public void ReceiveBroadcast(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveBroadcast(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: broadcast"); }
 
-        public void ReceiveTransportAddress(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveTransportAddress(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: transport-address"); }
 
-        public void ReceiveBrokerOne(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveBrokerOne(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: broker-one"); }
 
-        public void ReceiveBrokerAll(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveBrokerAll(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: broker-all"); }
 
-        public void ReceiveRecommendOne(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveRecommendOne(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: recommend-one"); }
 
-        public void ReceiveRecommendAll(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveRecommendAll(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: recommend-all"); }
 
-        public void ReceiveRecruitOne(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveRecruitOne(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: recruit-one"); }
 
-        public void ReceiveRecruitAll(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveRecruitAll(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: recruit-all"); }
 
-        //public void Receive_reply(KQMLPerformative msg, string content)
+        public virtual void Receive_reply(KQMLPerformative msg, string content) { }
         // logger.error(msg, "unexpected performative: reply");
 
-        public void ReceiveRequest(KQMLPerformative msg, KQMLObject content)
+        public virtual void ReceiveRequest(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: request"); }
 
-        public void ReceiveEos(KQMLPerformative msg)
+        public virtual void ReceiveEos(KQMLPerformative msg)
         { ErrorReply(msg, "unexpected performative: eos"); }
 
         //public void eceive_error(KQMLPerformative msg)
@@ -357,10 +361,10 @@ namespace KQML
         // public void Receive_next(KQMLPerformative msg)
         //    { ErrorReply(msg, "unexpected performative: next"); }
 
-        public void ReceiveRest(KQMLPerformative msg)
+        public virtual void ReceiveRest(KQMLPerformative msg)
         { ErrorReply(msg, "unexpected performative: rest"); }
 
-        public void ReceiveDiscard(KQMLPerformative msg)
+        public virtual void ReceiveDiscard(KQMLPerformative msg)
         { ErrorReply(msg, "unexpected performative: discard"); }
 
         //public void Receive_unregister(KQMLPerformative msg)

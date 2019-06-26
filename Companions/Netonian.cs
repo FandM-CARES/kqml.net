@@ -5,22 +5,32 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 
 namespace Companions
 {
     public delegate List<object> AskDelegate(params object[] arguments);
+
+    public delegate List<object> AchieveDelegate(object argument);
     public class Netonian : KQMLModule
     {
         public DateTime StartTime;
         public int LocalPort;
         public Dictionary<string, AskDelegate> Asks;
+        public Dictionary<string, AchieveDelegate> Achieves;
+        public bool Ready;
+        public string State;
 
-        public Netonian()
+        public Netonian() : base()
         {
             LocalPort = 8950;
             StartTime = DateTime.Now;
             Asks = new Dictionary<string, AskDelegate>();
-            Listen();
+            Ready = true;
+            State = "idle";
+
+            Thread t = new Thread(new ThreadStart(Listen));
+            t.Start();
         }
         public override void Register()
         {
@@ -48,25 +58,38 @@ namespace Companions
 
         public void Listen()
         {
+
             TcpListener server = new TcpListener(IPAddress.Parse("127.0.0.1"), LocalPort);
             server.Start();
 
             while (Running)
             {
+                Console.WriteLine("Waiting for a connection...");
+
                 TcpClient client = server.AcceptTcpClient();
+                Console.WriteLine("Connected!");
 
                 NetworkStream ns = client.GetStream();
                 StreamReader sr = new StreamReader(ns);
                 KQMLReader reader = new KQMLReader(sr);
-                Dispatcher.Reader = reader;
+                //Dispatcher.Reader = reader;
+
+                StreamWriter sw = new StreamWriter(ns);
+                Out = sw;
+
+                Dispatcher = new KQMLDispatcher(this, reader, Name);
+                Thread t = new Thread(Dispatcher.Start);
+                t.Start();
+
             }
+
         }
 
         public override void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
         {
             if (!(content is KQMLList contentList))
                 throw new ArgumentException("content not a KQMLList");
-            string pred = contentList.Head();
+            string pred = contentList.Head() ?? throw new ArgumentNullException("content is null");
             // find all bounded arguments
             List<KQMLObject> bounded = new List<KQMLObject>();
             foreach (var element in contentList.Data)
@@ -86,11 +109,72 @@ namespace Companions
             // query with those arguments
             AskDelegate del = Asks[pred];
 
-            // using KQMLObject because I really have no idea what types we are getting here lol
+            // type unclear
             var results = del(bounded);
             KQMLObject respType = msg.Get("response");
             RespondToQuery(msg, contentList, results, respType);
 
+        }
+
+        public override void ReceiveAchieve(KQMLPerformative msg, KQMLObject content)
+        {
+            if (content is KQMLList contentList)
+            {
+                if (contentList.Head().Equals("task"))
+                {
+                    KQMLObject action = contentList.Get("action");
+                    if (action != null)
+                        HandleAchieveAction(msg, contentList, action);
+                    else
+                    {
+                        ErrorReply(msg, "no action for achieve task provided");
+                    }
+                }
+                else if (contentList.Head().Equals("actionSequence"))
+                    ErrorReply(msg, "unexpected achieve command:actionSequence");
+                else if (contentList.Head().Equals("eval"))
+                    ErrorReply(msg, "unexpected achieve command: eval");
+                else
+                {
+                    ErrorReply(msg, $"unexpected achieve command: {contentList.Head()}");
+                }
+
+            }
+
+            ErrorReply(msg, $"Invalid content type: {content}");
+        }
+
+        public void HandleAchieveAction(KQMLPerformative msg, KQMLList contentList, KQMLObject action)
+        {
+            if (action is KQMLList actionList)
+            {
+                if (Achieves.ContainsKey(actionList.Head()))
+                {
+                    try
+                    {
+                        List<KQMLObject> args = actionList.Data.Skip(1).ToList();
+                        AchieveDelegate del = Achieves[actionList.Head()];
+                        //FIXME: type unclear
+                        var results = del(args);
+                        // TODO: Log results
+                        KQMLPerformative reply = new KQMLPerformative("tell");
+                        reply.Set("sender", Name);
+                        var resultsList = Listify(results);
+                        reply.Set("content", resultsList);
+                        Reply(msg, reply);
+                    }
+                    catch (Exception)
+                    {
+                        // TODO: log errors
+                        ErrorReply(msg, $"An error occurred while executing {actionList.Head()}");
+                    }
+                }
+                else
+                {
+                    ErrorReply(msg, $"unknown action {actionList.Head()}");
+                }
+            }
+            ErrorReply(msg, $"Invalid action type: {action}");
         }
 
         public override void ReceiveOtherPerformative(KQMLPerformative msg)
@@ -135,14 +219,77 @@ namespace Companions
             throw new NotImplementedException();
         }
 
-        public object Listify(object results)
+        public object Listify(object target)
+        {
+            Type targetType = target.GetType();
+
+            if (targetType == typeof(List<>))
+            {
+                var targetList = (List<object>)target;
+                var newList = targetList.Select(Listify).ToList();
+                return new KQMLList(newList);
+            }
+            if (targetType == typeof(Tuple<>))
+            {
+                if (targetType.GetGenericArguments().Length == 2)
+                {
+                    var targetTuple = (Tuple<object, object>)target;
+                    // what does car and cdr stand for?
+                    var car = Listify(targetTuple.Item1);
+                    var cdr = Listify(targetTuple.Item2);
+                    return new KQMLList(new List<object> { car, new KQMLToken("."), cdr });
+                }
+                else
+                {
+                    var targetTuple = (IEnumerable<object>)target;
+                    var newList = targetTuple.Select(Listify).ToList();
+                    return new KQMLList(newList);
+                }
+            }
+            if (target is string targetString)
+            {
+                if (targetString.Contains(" "))
+                {
+                    // TODO: Incomplete
+                    if (targetString[0] == '(' && targetString.Last() == ')')
+                    {
+                        List<string> terms = targetString.Substring(1, targetString.Length - 2).Split(' ').ToList();
+                        return new KQMLList(terms.Select(Listify).ToList());
+                    }
+                    else
+
+                        return new KQMLString(targetString);
+
+                }
+                else
+                    return new KQMLToken(targetString);
+
+            }
+
+            if (targetType == typeof(Dictionary<object, object>))
+            {
+                var targetDictionary = (Dictionary<object, object>)target;
+                return new KQMLList(targetDictionary.Select(TupleListify
+                    ).ToList());
+            }
+
+            return null;
+        }
+
+        private object TupleListify(KeyValuePair<object, object> kv)
         {
             throw new NotImplementedException();
         }
 
+
         public void RespondWithBindings(KQMLPerformative msg, KQMLList content, object results)
         {
             throw new NotImplementedException();
+        }
+
+        public override void ReceiveEof()
+        {
+
         }
 
 
