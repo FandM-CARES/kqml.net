@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Text;
+﻿using System.IO;
 
 namespace KQML
 {
     public class KQMLString : KQMLObject
     {
-        public string Data { get; }
-        public int Length { get { return Data.Length; } }
+        public string Data { get; set; }
+        public int Length => Data.Length;
 
         public KQMLString(string data = "")
         {

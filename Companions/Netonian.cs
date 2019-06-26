@@ -209,28 +209,43 @@ namespace Companions
 
         public void RespondWithPattern(KQMLPerformative msg, KQMLList content, object results)
         {
-            //KQMLList replyContent = new KQMLList(content.Head());
-            //List<object> resultsList = (results is List<object> list) ?
-            //    list : new List<object>() { results };
-            //int resultIndex = 0;
-            //int resultLength = resultsList.Count - 1;
+            KQMLList replyContent = new KQMLList(content.Head());
+            List<object> resultsList = (results is List<object> list) ?
+                list : new List<object>() { results };
+            int resultIndex = 0;
+            int resultLength = resultsList.Count - 1;
 
-            //// pythonian: len(content.data[1:]
-            //int argLength = content.Count - 1;
-            //for (int i = 0; i <= argLength; i++)
-            //{
-                
-            //    // if(content.Data[0] is KQMLToken token || content.Data[0] is KQMLString )
-            //    if (i == argLength && resultIndex < resultLength)
-            //        replyContent.Append(Listify(resultsList.Skip(resultIndex - 1)));
-            //    else
-            //    {
-            //        replyContent.Append(Listify(resultsList[resultIndex]));
-            //        resultIndex += 1;
-            //    }
-            //}
+            // pythonian: len(content.data[1:])
+            int argLength = content.Count - 1;
+            for (int i = 0; i <= argLength; i++)
+            {
 
-            throw new NotImplementedException();
+                if (content.Data[0] is KQMLString indexable)
+                {
+                    if(indexable[0] == '?')
+                    {
+                        if (i == argLength && resultIndex < resultLength)
+                            replyContent.Append(Listify(resultsList.Skip(resultIndex - 1)));
+                        else
+                        {
+                            replyContent.Append(Listify(resultsList[resultIndex]));
+                            resultIndex += 1;
+                        }
+                    }
+                    else
+                    {
+                        replyContent.Append(indexable);
+                    }
+
+                }
+                    
+            }
+            KQMLPerformative replyMsg = new KQMLPerformative("tell");
+            replyMsg.Set("sender", Name);
+            replyMsg.Set("content", replyContent);
+            Reply(msg, replyMsg);
+
+
         }
 
         public object Listify(object target)
