@@ -127,6 +127,11 @@ namespace KQML
             get { return Data[i]; }
 
         }
+
+        public override int GetHashCode()
+        {
+            return Data.GetHashCode();
+        }
     }
 }
 

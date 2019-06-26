@@ -34,6 +34,11 @@ namespace KQML
             return base.Equals(obj);
         }
 
+        public override int GetHashCode()
+        {
+            return Data.GetHashCode();
+        }
+
         public override string ToString()
         {
             return Data;
