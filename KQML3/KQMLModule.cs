@@ -31,8 +31,7 @@ namespace KQML
         public bool Running;
 
         //Log log log
-        private readonly ILog _log = LogManager.GetLogger(typeof(KQMLModule));
-
+       
         public KQMLModule()
         {
             Host = "localhost";

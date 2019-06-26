@@ -1,6 +1,9 @@
 ﻿using KQML;
+using log4net;
+using log4net.Config;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -20,6 +23,7 @@ namespace Companions
         public Dictionary<string, AchieveDelegate> Achieves;
         public bool Ready;
         public string State;
+        public static ILog Log { get; } = LogManager.GetLogger(typeof(Netonian));
 
         public Netonian() : base()
         {
@@ -61,6 +65,7 @@ namespace Companions
 
             TcpListener server = new TcpListener(IPAddress.Parse("127.0.0.1"), LocalPort);
             server.Start();
+            Log.Debug("Listening...");
 
             while (Running)
             {
@@ -127,6 +132,7 @@ namespace Companions
                         HandleAchieveAction(msg, contentList, action);
                     else
                     {
+                        
                         ErrorReply(msg, "no action for achieve task provided");
                     }
                 }
@@ -156,16 +162,18 @@ namespace Companions
                         AchieveDelegate del = Achieves[actionList.Head()];
                         //FIXME: type unclear
                         var results = del(args);
-                        // TODO: Log results
+                        Log.Debug("Return of achieve: " + results);
+
                         KQMLPerformative reply = new KQMLPerformative("tell");
                         reply.Set("sender", Name);
                         var resultsList = Listify(results);
                         reply.Set("content", resultsList);
                         Reply(msg, reply);
                     }
-                    catch (Exception)
+                    catch (Exception e )
                     {
-                        // TODO: log errors
+                        StackTrace st = new StackTrace(new StackFrame(true));
+                        Log.Debug(st.ToString(), e);
                         ErrorReply(msg, $"An error occurred while executing {actionList.Head()}");
                     }
                 }
@@ -379,7 +387,8 @@ namespace Companions
 
         static void Main(string[] args)
         {
-            // TODO: Log look at token test for reference
+            // Log log log
+            _ = XmlConfigurator.Configure(new FileInfo("logging.xml"));
 
             Netonian net = new Netonian();
             net.Start();
