@@ -82,7 +82,12 @@ namespace KQML
         {
             _log.Debug("Reading Expression from " + Reader.ToString());
 
-            char ch = (char)Reader.Peek();
+            int peek = Reader.Peek();
+            if (peek < 0)
+            {
+                throw new EndOfStreamException("EOF received: " + peek);
+            }
+            char ch = (char)peek;
             if (ch == '\'' || ch == '`')
                 return ReadQuotation(backquoted);
             else if (ch == '"' || ch == '#')

@@ -44,7 +44,7 @@ namespace KQML
             }
             catch (EndOfStreamException)
             {
-                _log.Error("Received end-of-stream error");
+                _log.Info("Received end-of-stream error");
                 Receiver.ReceiveEof();
             }
             catch (IOException e)
