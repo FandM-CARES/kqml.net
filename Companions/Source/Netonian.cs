@@ -8,19 +8,24 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Threading;
 
 namespace Companions
 {
-    public delegate List<object> AskDelegate(params object[] arguments);
+    //public delegate IEnumerable<object> AskDelegate(params object[] arguments);
+    //public delegate IEnumerable<object> AchieveDelegate(object argument);
 
-    public delegate List<object> AchieveDelegate(object argument);
     public class Netonian : KQMLModule
     {
         public DateTime StartTime;
         public int LocalPort;
-        public Dictionary<string, AskDelegate> Asks;
-        public Dictionary<string, AchieveDelegate> Achieves;
+        //public Dictionary<string, AskDelegate> Asks;
+        //public Dictionary<string, AchieveDelegate> Achieves;
+        //public Dictionary<string, MethodInfo> Asks;
+        //public Dictionary<string, MethodInfo> Achieves;
+        public List<string> Asks;
+        public List<string> Achieves;
         public bool Ready;
         public string State;
         public static ILog Log { get; } = LogManager.GetLogger(typeof(Netonian));
@@ -29,7 +34,7 @@ namespace Companions
         {
             LocalPort = 8950;
             StartTime = DateTime.Now;
-            Asks = new Dictionary<string, AskDelegate>();
+            Asks = new List<string>();
             Ready = true;
             State = "idle";
 
@@ -55,9 +60,9 @@ namespace Companions
         /// </summary>
         /// <param name="name">The name of the function</param>
         /// <param name="function">The function as an AskDelegate</param>
-        public void AddAsk(string name, AskDelegate function)
+        public void AddAsk(string name)
         {
-            Asks.Add(name, function);
+            Asks.Add(name);
         }
 
         public void Listen()
@@ -69,10 +74,10 @@ namespace Companions
 
             while (Running)
             {
-                Console.WriteLine("Waiting for a connection...");
+                //Console.WriteLine("Waiting for a connection...");
 
                 TcpClient client = server.AcceptTcpClient();
-                Console.WriteLine("Connected!");
+                //Console.WriteLine("Connected!");
 
                 NetworkStream ns = client.GetStream();
                 StreamReader sr = new StreamReader(ns);
@@ -92,6 +97,7 @@ namespace Companions
 
         public override void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
         {
+            Log.Debug($"ReceiveAskOne invoked with {msg} and content {content}");
             if (!(content is KQMLList contentList))
                 throw new ArgumentException("content not a KQMLList");
             string pred = contentList.Head() ?? throw new ArgumentNullException("content is null");
@@ -102,22 +108,30 @@ namespace Companions
                 if (element is KQMLString elementString)
                 {
                     if (elementString[0] != '?')
-                        bounded.Append(elementString);
+                        bounded.Add(elementString);
                 }
                 else if (element is KQMLToken elementToken)
                 {
                     if (elementToken[0] != '?')
-                        bounded.Append(elementToken);
+                        bounded.Add(elementToken);
                 }
 
             }
             // query with those arguments
-            AskDelegate del = Asks[pred];
+            MethodInfo del = GetType().GetMethod(pred);
 
             // type unclear
-            var results = del(bounded);
-            KQMLObject respType = msg.Get("response");
-            RespondToQuery(msg, contentList, results, respType);
+            if (del != null)
+            {
+                var results = del.Invoke(this, bounded.ToArray());
+                Log.Debug($"{del} invoked with arguments {bounded}. Results were {results}");
+                KQMLObject respType = msg.Get("response");
+                RespondToQuery(msg, contentList, results, respType);
+
+            }
+            else
+                Log.Error("no method named " + pred);
+
 
         }
 
@@ -132,12 +146,12 @@ namespace Companions
                         HandleAchieveAction(msg, contentList, action);
                     else
                     {
-                        
+
                         ErrorReply(msg, "no action for achieve task provided");
                     }
                 }
                 else if (contentList.Head().Equals("actionSequence"))
-                    ErrorReply(msg, "unexpected achieve command:actionSequence");
+                    ErrorReply(msg, "unexpected achieve command: actionSequence");
                 else if (contentList.Head().Equals("eval"))
                     ErrorReply(msg, "unexpected achieve command: eval");
                 else
@@ -154,14 +168,14 @@ namespace Companions
         {
             if (action is KQMLList actionList)
             {
-                if (Achieves.ContainsKey(actionList.Head()))
+                if (Achieves.Contains(actionList.Head()))
                 {
                     try
                     {
                         List<KQMLObject> args = actionList.Data.Skip(1).ToList();
-                        AchieveDelegate del = Achieves[actionList.Head()];
+                        MethodInfo del = this.GetType().GetMethod(actionList.Head());
                         //FIXME: type unclear
-                        var results = del(args);
+                        var results = del.Invoke(this, args.ToArray());
                         Log.Debug("Return of achieve: " + results);
 
                         KQMLPerformative reply = new KQMLPerformative("tell");
@@ -170,7 +184,7 @@ namespace Companions
                         reply.Set("content", resultsList);
                         Reply(msg, reply);
                     }
-                    catch (Exception e )
+                    catch (Exception e)
                     {
                         StackTrace st = new StackTrace(new StackFrame(true));
                         Log.Debug(st.ToString(), e);
@@ -199,12 +213,16 @@ namespace Companions
         public void RespondToQuery(KQMLPerformative msg, KQMLList content, object results, KQMLObject respType)
         {
             // ReSharper disable once SuspiciousTypeConversion.Global
-            if (respType == null || respType.Equals(":pattern"))
-                RespondWithPattern(msg, content, results);
-            else
+            if (respType is KQMLString respTypeString)
             {
-                RespondWithBindings(msg, content, results);
+                if (respTypeString == null || respTypeString.Equals(":pattern"))
+                    RespondWithPattern(msg, content, results);
+                else
+                {
+                    RespondWithBindings(msg, content, results);
+                }
             }
+
         }
 
         public void RespondWithPattern(KQMLPerformative msg, KQMLList content, object results)
@@ -222,7 +240,7 @@ namespace Companions
 
                 if (content.Data[0] is KQMLString indexable)
                 {
-                    if(indexable[0] == '?')
+                    if (indexable[0] == '?')
                     {
                         if (i == argLength && resultIndex < resultLength)
                             replyContent.Append(Listify(resultsList.Skip(resultIndex - 1)));
@@ -233,12 +251,9 @@ namespace Companions
                         }
                     }
                     else
-                    {
                         replyContent.Append(indexable);
-                    }
-
                 }
-                    
+
             }
             KQMLPerformative replyMsg = new KQMLPerformative("tell");
             replyMsg.Set("sender", Name);
@@ -247,34 +262,19 @@ namespace Companions
 
 
         }
-
-        public object Listify(object target)
+        public KQMLObject Listify(KeyValuePair<object, object> target)
         {
-            Type targetType = target.GetType();
+            var key = target.Key;
+            var value = target.Value;
 
-            if (targetType == typeof(List<>))
-            {
-                var targetList = (List<object>)target;
-                var newList = targetList.Select(Listify).ToList();
-                return new KQMLList(newList);
-            }
-            if (targetType == typeof(Tuple<>))
-            {
-                if (targetType.GetGenericArguments().Length == 2)
-                {
-                    var targetTuple = (Tuple<object, object>)target;
-                    // what does car and cdr stand for?
-                    var car = Listify(targetTuple.Item1);
-                    var cdr = Listify(targetTuple.Item2);
-                    return new KQMLList(new List<object> { car, new KQMLToken("."), cdr });
-                }
-                else
-                {
-                    var targetTuple = (IEnumerable<object>)target;
-                    var newList = targetTuple.Select(Listify).ToList();
-                    return new KQMLList(newList);
-                }
-            }
+            string resultKey = ":" + key.ToString();
+            var resultValue = Listify(value);
+
+            return KQMLList.FromString($"({resultKey} {resultValue})");
+        }
+
+        public KQMLObject Listify(object target)
+        {
             if (target is string targetString)
             {
                 if (targetString.Contains(" "))
@@ -294,20 +294,32 @@ namespace Companions
                     return new KQMLToken(targetString);
 
             }
-
-            if (targetType == typeof(Dictionary<object, object>))
-            {
-                var targetDictionary = (Dictionary<object, object>)target;
-                return new KQMLList(targetDictionary.Select(TupleListify
-                    ).ToList());
-            }
-
-            return null;
+            else
+                return new KQMLToken(target.ToString());
         }
 
-        private object TupleListify(KeyValuePair<object, object> kv)
+        public KQMLObject Listify(IEnumerable<object> target)
         {
-            throw new NotImplementedException();
+            var targetList = target.Select(Listify).ToList();
+            return new KQMLList(Flatten(targetList));
+        }
+
+        public List<KQMLObject> Flatten(List<KQMLObject> target)
+        {
+            List<KQMLObject> flatList = new List<KQMLObject>();
+            foreach (var entry in target)
+            {
+                if (entry is KQMLList assocList && assocList.Count == 2)
+                {
+                    flatList.Append(assocList[0]);
+                    flatList.Append(assocList[1]);
+                }
+                else
+                {
+                    flatList.Append(entry);
+                }
+            }
+            return flatList;
         }
 
 
@@ -400,12 +412,19 @@ namespace Companions
 
         }
 
+        public static int test(string foo)
+        {
+            Console.WriteLine(foo);
+            return 1;
+        }
+
         static void Main(string[] args)
         {
             // Log log log
             _ = XmlConfigurator.Configure(new FileInfo("logging.xml"));
 
             Netonian net = new Netonian();
+
             net.Start();
         }
 

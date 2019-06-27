@@ -81,8 +81,6 @@ namespace KQML
 
         public KQMLObject ReadExpr(bool backquoted = false)
         {
-            _log.Debug("Reading Expression from " + Reader.ToString());
-
             int peek = Reader.Peek();
             if (peek < 0)
             {
