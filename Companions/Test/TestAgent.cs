@@ -1,4 +1,5 @@
-﻿using log4net;
+﻿using KQML;
+using log4net;
 using log4net.Config;
 using System;
 using System.Collections.Generic;
@@ -21,10 +22,10 @@ namespace Companions.Test
 
         }
 
-        public List<string> TestAskReturnList(string input)
+        public List<KQMLObject> TestAskReturnList(List<KQMLObject> input)
         {
             Log.Debug("Testing ask with input" + input.ToString());
-            return new List<string> { input };
+            return input;
         }
         static void Main(string[] args)
         {

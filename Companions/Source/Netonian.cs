@@ -120,11 +120,13 @@ namespace Companions
             // query with those arguments
             MethodInfo del = GetType().GetMethod(pred);
 
+            
+
             // type unclear
             if (del != null)
             {
-                var results = del.Invoke(this, bounded.ToArray());
-                Log.Debug($"{del} invoked with arguments {bounded}. Results were {results}");
+                var results = del.Invoke(this, new object[] { bounded });
+                Log.Debug(message: $"{del} invoked with arguments {bounded}. Results were {results}");
                 KQMLObject respType = msg.Get("response");
                 RespondToQuery(msg, contentList, results, respType);
 
@@ -222,6 +224,8 @@ namespace Companions
                     RespondWithBindings(msg, content, results);
                 }
             }
+            else
+                RespondWithPattern(msg, content, results);
 
         }
 
