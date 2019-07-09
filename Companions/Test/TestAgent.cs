@@ -13,7 +13,7 @@ namespace Companions.Test
 {
     class TestAgent : Netonian
     {
-        new readonly string Name = "TestAgent";
+        
         private static readonly new ILog Log = LogManager.GetLogger(typeof(TestAgent));
         public TestAgent()
         {
@@ -22,10 +22,11 @@ namespace Companions.Test
 
         }
 
-        public List<KQMLObject> TestAskReturnList(List<KQMLObject> input)
+        public List<object> TestAskReturnList(List<KQMLObject> input)
         {
-            Log.Debug("Testing ask with input" + input.ToString());
-            return input;
+            Log.Debug("Testing ask with input"
+                      + String.Join(" ", input));
+            return new List<object> { "this is so hard" };
         }
         static void Main(string[] args)
         {

@@ -120,7 +120,7 @@ namespace Companions
             // query with those arguments
             MethodInfo del = GetType().GetMethod(pred);
 
-            
+
 
             // type unclear
             if (del != null)
@@ -128,7 +128,7 @@ namespace Companions
                 var results = del.Invoke(this, new object[] { bounded });
                 Log.Debug(message: $"{del} invoked with arguments {bounded}. Results were {results}");
                 KQMLObject respType = msg.Get("response");
-                RespondToQuery(msg, contentList, results, respType);
+                RespondToQuery(msg, contentList, (List<object>)results, respType);
 
             }
             else
@@ -212,7 +212,7 @@ namespace Companions
             }
         }
 
-        public void RespondToQuery(KQMLPerformative msg, KQMLList content, object results, KQMLObject respType)
+        public void RespondToQuery(KQMLPerformative msg, KQMLList content, List<object> results, KQMLObject respType)
         {
             // ReSharper disable once SuspiciousTypeConversion.Global
             if (respType is KQMLString respTypeString)
@@ -229,34 +229,41 @@ namespace Companions
 
         }
 
-        public void RespondWithPattern(KQMLPerformative msg, KQMLList content, object results)
+        //private static List<object> FlattenNestedList(List<object> target)
+        //{
+        //    if (target.Count == 1)
+        //    {
+        //        return target[0];
+        //    }
+        //    return null;
+        //}
+
+        public void RespondWithPattern(KQMLPerformative msg, KQMLList content, List<object> results)
         {
             KQMLList replyContent = new KQMLList(content.Head());
-            List<object> resultsList = (results is List<object> list) ?
-                list : new List<object>() { results };
             int resultIndex = 0;
-            int resultLength = resultsList.Count - 1;
 
             // pythonian: len(content.data[1:])
             int argLength = content.Count - 1;
-            for (int i = 0; i <= argLength; i++)
+            int i = 0;
+            foreach(var each in content.Data.Skip(1))
             {
-
-                if (content.Data[0] is KQMLString indexable)
+                if (each is KQMLString indexable)
                 {
                     if (indexable[0] == '?')
                     {
-                        if (i == argLength && resultIndex < resultLength)
-                            replyContent.Append(Listify(resultsList.Skip(resultIndex - 1)));
+                        if (i == argLength && resultIndex < results.Count - 1)
+                            replyContent.Append(Listify(results.Skip(resultIndex - 1)));
                         else
                         {
-                            replyContent.Append(Listify(resultsList[resultIndex]));
+                            replyContent.Append(Listify(results[resultIndex]));
                             resultIndex += 1;
                         }
                     }
                     else
                         replyContent.Append(indexable);
                 }
+                ++i;
 
             }
             KQMLPerformative replyMsg = new KQMLPerformative("tell");
@@ -264,8 +271,46 @@ namespace Companions
             replyMsg.Set("content", replyContent);
             Reply(msg, replyMsg);
 
-
         }
+        //public void RespondWithPattern(KQMLPerformative msg, KQMLList content, object results)
+        //{
+        //    KQMLList replyContent = new KQMLList(content.Head());
+        //    List<object> resultsList = new List<object> { results };
+
+        //    int resultIndex = 0;
+        //    int resultLength = resultsList.Count - 1;
+
+        //    // pythonian: len(content.data[1:])
+        //    int argLength = content.Count - 1;
+        //    for (int i = 0; i <= argLength; i++)
+        //    {
+
+        //        if (content.Data[0] is KQMLString indexable)
+        //        {
+        //            if (indexable[0] == '?')
+        //            {
+        //                if (i == argLength && resultIndex < resultLength)
+        //                    replyContent.Append(Listify(resultsList.Skip(resultIndex - 1)));
+        //                else
+        //                {
+        //                    replyContent.Append(Listify(resultsList[resultIndex]));
+        //                    resultIndex += 1;
+        //                }
+        //            }
+        //            else
+        //                replyContent.Append(indexable);
+        //        }
+
+        //    }
+        //    KQMLPerformative replyMsg = new KQMLPerformative("tell");
+        //    replyMsg.Set("sender", Name);
+        //    replyMsg.Set("content", replyContent);
+        //    Reply(msg, replyMsg);
+
+
+        //}
+
+        
         public KQMLObject Listify(KeyValuePair<object, object> target)
         {
             var key = target.Key;
@@ -290,7 +335,6 @@ namespace Companions
                         return new KQMLList(terms.Select(Listify).ToList());
                     }
                     else
-
                         return new KQMLString(targetString);
 
                 }
@@ -327,7 +371,7 @@ namespace Companions
         }
 
 
-        public void RespondWithBindings(KQMLPerformative msg, KQMLList content, object results)
+        public void RespondWithBindings(KQMLPerformative msg, KQMLList content, List<object> results)
         {
             throw new NotImplementedException();
         }
