@@ -22,12 +22,14 @@ namespace Companions.Test
 
         }
 
-        public List<object> TestAskReturnList(List<KQMLObject> input)
+        public List<object> TestAskReturnList(KQMLObject input)
         {
             Log.Debug("Testing ask with input"
-                      + String.Join(" ", input));
+                      + string.Join(" ", input));
             return new List<object> { "this is so hard" };
         }
+
+        
         static void Main(string[] args)
         {
             _ = XmlConfigurator.Configure(new FileInfo("logging.xml"));

@@ -30,8 +30,9 @@ namespace KQML
         public string GroupName;
         public bool Running;
 
-        //Log log log
-       
+        public static ILog Log { get; } = LogManager.GetLogger(typeof(KQMLModule));
+
+
         public KQMLModule()
         {
             Host = "localhost";
@@ -51,7 +52,7 @@ namespace KQML
             //TODO: Needs to handle command line argument and change defaults
             // JRW: Worry about that later
 
-            
+
             Connect(Host, Port);
             Dispatcher = new KQMLDispatcher(this, new KQMLReader(In), "secret-dispatch");
             Register();
@@ -83,7 +84,7 @@ namespace KQML
             //    }
             //}
 
-             Dispatcher.Start();
+            Dispatcher.Start();
         }
 
         public void SubscribeRequest(string reqType)
@@ -150,18 +151,17 @@ namespace KQML
         {
             try
             {
-                Console.WriteLine("Attempting to write: " + msg);
+                //Console.WriteLine("Attempting to write: " + msg);
                 msg.Write(Out);
                 Out.Write('\n');
                 Out.Flush();
-                Console.WriteLine("written!");
+                Log.Debug("Written message " + msg);
             }
             catch (IOException)
             {
                 Console.WriteLine("Write failed");
                 Out.Write("\n");
                 Out.Flush();
-                
             }
         }
 
@@ -244,27 +244,27 @@ namespace KQML
 
         public virtual void ReceiveMessageMissingContent(KQMLPerformative msg)
         {
-             ErrorReply(msg, "missing content in performative"); 
+            ErrorReply(msg, "missing content in performative");
         }
 
         public virtual void ReceiveAskIf(KQMLPerformative msg, KQMLObject content)
         {
-            ErrorReply(msg, "unexpected performative: ask-if"); 
+            ErrorReply(msg, "unexpected performative: ask-if");
         }
 
         public virtual void ReceiveAskAll(KQMLPerformative msg, KQMLObject content)
         {
-            ErrorReply(msg, "unexpected performative: ask-all"); 
+            ErrorReply(msg, "unexpected performative: ask-all");
         }
 
         public virtual void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
         {
-             ErrorReply(msg, "unexpected performative: ask-one"); 
+            ErrorReply(msg, "unexpected performative: ask-one");
         }
 
         public virtual void ReceiveStreamAll(KQMLPerformative msg, KQMLObject content)
         {
-            ErrorReply(msg, "unexpected performative: stream-all"); 
+            ErrorReply(msg, "unexpected performative: stream-all");
 
         }
 

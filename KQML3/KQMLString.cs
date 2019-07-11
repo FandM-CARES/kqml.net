@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 
 namespace KQML
 {
@@ -42,5 +43,16 @@ namespace KQML
         }
 
         public char this[int i] => Data[i];
+
+        public static implicit operator int(KQMLString input)
+        {
+            int num;
+            if (int.TryParse(input.Data, out num))
+            {
+                return num;
+            }
+            throw new ArgumentException($"Cannot convert to type Int32: {input.Data}");
+        }
+       
     }
 }

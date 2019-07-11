@@ -2,6 +2,7 @@
 using log4net;
 using log4net.Config;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -97,35 +98,25 @@ namespace Companions
 
         public override void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
         {
-            Log.Debug($"ReceiveAskOne invoked with {msg} and content {content}");
+            Log.Debug($"ReceiveAskOne called with {msg} and content {content}");
             if (!(content is KQMLList contentList))
                 throw new ArgumentException("content not a KQMLList");
             string pred = contentList.Head() ?? throw new ArgumentNullException("content is null");
             // find all bounded arguments
-            List<KQMLObject> bounded = new List<KQMLObject>();
-            foreach (var element in contentList.Data)
+            List<object> bounded = new List<object>();
+            foreach (var element in contentList.Data.Skip(1))
             {
-                if (element is KQMLString elementString)
-                {
-                    if (elementString[0] != '?')
-                        bounded.Add(elementString);
-                }
-                else if (element is KQMLToken elementToken)
-                {
-                    if (elementToken[0] != '?')
-                        bounded.Add(elementToken);
-                }
+                if (element.ToString()[0] != '?')
+                    bounded.Add(element);
 
             }
             // query with those arguments
             MethodInfo del = GetType().GetMethod(pred);
 
-
-
             // type unclear
             if (del != null)
             {
-                var results = del.Invoke(this, new object[] { bounded });
+                var results = del.Invoke(this, bounded.ToArray());
                 Log.Debug(message: $"{del} invoked with arguments {bounded}. Results were {results}");
                 KQMLObject respType = msg.Get("response");
                 RespondToQuery(msg, contentList, (List<object>)results, respType);
@@ -182,7 +173,7 @@ namespace Companions
 
                         KQMLPerformative reply = new KQMLPerformative("tell");
                         reply.Set("sender", Name);
-                        var resultsList = Listify(results);
+                        var resultsList = Listify((dynamic)results);
                         reply.Set("content", resultsList);
                         Reply(msg, reply);
                     }
@@ -214,7 +205,6 @@ namespace Companions
 
         public void RespondToQuery(KQMLPerformative msg, KQMLList content, List<object> results, KQMLObject respType)
         {
-            // ReSharper disable once SuspiciousTypeConversion.Global
             if (respType is KQMLString respTypeString)
             {
                 if (respTypeString == null || respTypeString.Equals(":pattern"))
@@ -229,24 +219,14 @@ namespace Companions
 
         }
 
-        //private static List<object> FlattenNestedList(List<object> target)
-        //{
-        //    if (target.Count == 1)
-        //    {
-        //        return target[0];
-        //    }
-        //    return null;
-        //}
-
         public void RespondWithPattern(KQMLPerformative msg, KQMLList content, List<object> results)
         {
             KQMLList replyContent = new KQMLList(content.Head());
             int resultIndex = 0;
 
-            // pythonian: len(content.data[1:])
             int argLength = content.Count - 1;
             int i = 0;
-            foreach(var each in content.Data.Skip(1))
+            foreach (var each in content.Data.Skip(1))
             {
                 if (each is KQMLString indexable)
                 {
@@ -256,7 +236,7 @@ namespace Companions
                             replyContent.Append(Listify(results.Skip(resultIndex - 1)));
                         else
                         {
-                            replyContent.Append(Listify(results[resultIndex]));
+                            replyContent.Append(Listify((dynamic)results[resultIndex]));
                             resultIndex += 1;
                         }
                     }
@@ -272,83 +252,89 @@ namespace Companions
             Reply(msg, replyMsg);
 
         }
-        //public void RespondWithPattern(KQMLPerformative msg, KQMLList content, object results)
-        //{
-        //    KQMLList replyContent = new KQMLList(content.Head());
-        //    List<object> resultsList = new List<object> { results };
+      
 
-        //    int resultIndex = 0;
-        //    int resultLength = resultsList.Count - 1;
-
-        //    // pythonian: len(content.data[1:])
-        //    int argLength = content.Count - 1;
-        //    for (int i = 0; i <= argLength; i++)
-        //    {
-
-        //        if (content.Data[0] is KQMLString indexable)
-        //        {
-        //            if (indexable[0] == '?')
-        //            {
-        //                if (i == argLength && resultIndex < resultLength)
-        //                    replyContent.Append(Listify(resultsList.Skip(resultIndex - 1)));
-        //                else
-        //                {
-        //                    replyContent.Append(Listify(resultsList[resultIndex]));
-        //                    resultIndex += 1;
-        //                }
-        //            }
-        //            else
-        //                replyContent.Append(indexable);
-        //        }
-
-        //    }
-        //    KQMLPerformative replyMsg = new KQMLPerformative("tell");
-        //    replyMsg.Set("sender", Name);
-        //    replyMsg.Set("content", replyContent);
-        //    Reply(msg, replyMsg);
-
-
-        //}
-
-        
+        //colons are NOT added for keywords when handling dictioaries. Add your own colons 
         public KQMLObject Listify(KeyValuePair<object, object> target)
         {
             var key = target.Key;
             var value = target.Value;
 
             string resultKey = ":" + key.ToString();
-            var resultValue = Listify(value);
+            var resultValue = Listify((dynamic)value);
 
-            return KQMLList.FromString($"({resultKey} {resultValue})");
+            return KQMLList.FromString($"({resultKey} . {resultValue})");
+        }
+        
+        // This override exists for RespondToBinding purposes
+        public KQMLObject Listify(KeyValuePair<KQMLString, List<object>> target)
+        {
+            var key = target.Key;
+            var value = target.Value;
+
+            string resultKey = key.ToString();
+            var resultValue = Listify((dynamic)value);
+
+            return KQMLList.FromString($"({resultKey} . {resultValue})");
         }
 
-        public KQMLObject Listify(object target)
+        public KQMLObject Listify(string targetString)
         {
-            if (target is string targetString)
-            {
-                if (targetString.Contains(" "))
-                {
-                    // TODO: Incomplete
-                    if (targetString[0] == '(' && targetString.Last() == ')')
-                    {
-                        List<string> terms = targetString.Substring(1, targetString.Length - 2).Split(' ').ToList();
-                        return new KQMLList(terms.Select(Listify).ToList());
-                    }
-                    else
-                        return new KQMLString(targetString);
 
+            if (targetString.Contains(" "))
+            {
+                // TODO: Incomplete
+                if (targetString[0] == '(' && targetString.Last() == ')')
+                {
+                    List<string> terms = targetString.Substring(1, targetString.Length - 2).Split(' ').ToList();
+                    return new KQMLList(terms.Select(Listify).ToList());
                 }
                 else
-                    return new KQMLToken(targetString);
+                    return new KQMLString(targetString);
 
             }
             else
-                return new KQMLToken(target.ToString());
+                return new KQMLToken(targetString);
+        }
+
+        public KQMLObject Listify(int target)
+        {
+            return new KQMLToken(target.ToString());
+
+        }
+
+        public KQMLObject Listify(char target)
+        {
+            return new KQMLToken(target.ToString());
+
+        }
+
+        public KQMLObject Listify(bool target)
+        {
+            return new KQMLToken(target.ToString());
+
         }
 
         public KQMLObject Listify(IEnumerable<object> target)
         {
-            var targetList = target.Select(Listify).ToList();
+
+            List<KQMLObject> targetList = new List<KQMLObject>();
+            //= ((dynamic)target).Select(Listify).ToList();
+            foreach (var each in target)
+            {
+                targetList.Add((KQMLObject)Listify((dynamic)each));
+            }
+            return new KQMLList(Flatten(targetList));
+        }
+        public KQMLObject Listify(List<KeyValuePair<KQMLString, List<object>>> target)
+        {
+
+            List<KQMLObject> targetList = new List<KQMLObject>();
+            //= ((dynamic)target).Select(Listify).ToList();
+            foreach (var each in target)
+            {
+                targetList.Add((KQMLObject)Listify((dynamic)each));
+            }
             return new KQMLList(Flatten(targetList));
         }
 
@@ -359,12 +345,12 @@ namespace Companions
             {
                 if (entry is KQMLList assocList && assocList.Count == 2)
                 {
-                    flatList.Append(assocList[0]);
-                    flatList.Append(assocList[1]);
+                    flatList.Add(assocList[0]);
+                    flatList.Add(assocList[1]);
                 }
                 else
                 {
-                    flatList.Append(entry);
+                    flatList.Add(entry);
                 }
             }
             return flatList;
@@ -373,7 +359,37 @@ namespace Companions
 
         public void RespondWithBindings(KQMLPerformative msg, KQMLList content, List<object> results)
         {
-            throw new NotImplementedException();
+            int resultIndex = 0;
+            int argLength = content.Count - 1;
+            List<KeyValuePair<KQMLString, List<object>>> bindingsList = new List<KeyValuePair<KQMLString, List<object>>>();
+
+            int i = 0;
+            foreach (var each in content.Data.Skip(1))
+            {
+                if (each is KQMLString indexable)
+                {
+                    if (indexable[0] == '?')
+                    {
+                        if (i == argLength && resultIndex < results.Count - 1)
+                        {
+                            KeyValuePair<KQMLString, List<object>> pair =
+                                new KeyValuePair<KQMLString, List<object>>(indexable, results.Skip(resultIndex - 1).ToList());
+                            bindingsList.Add(pair);
+                        }
+                        else
+                        {
+                            KeyValuePair<KQMLString, List<object>> pair = new KeyValuePair<KQMLString, List<object>>(indexable, new List<object> { results[resultIndex] });
+                            resultIndex += 1;
+                            bindingsList.Add(pair);
+                        }
+                    }
+                    ++i;
+                }
+            }
+            KQMLPerformative replyMsg = new KQMLPerformative("tell");
+            replyMsg.Set("sender", Name);
+            replyMsg.Set("content", Listify((dynamic)bindingsList));
+            Reply(msg, replyMsg);
         }
 
         public override void ReceiveEof()

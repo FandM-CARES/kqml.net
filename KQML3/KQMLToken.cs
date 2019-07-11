@@ -114,8 +114,18 @@ namespace KQML
             else
                 throw new ArgumentException("obj must be string or KQMLToken");
         }
+        public static implicit operator int(KQMLToken input)
+        {
+            int num;
+            if (int.TryParse(input.Data, out num))
+            {
+                return num;
+            }
+            throw new ArgumentException($"Cannot convert to type Int32: {input.Data}");
+        }
 
-        
+
+
 
         public override int GetHashCode()
         {

@@ -64,14 +64,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Source\AchieveDelegate.cs" />
     <Compile Include="Source\Netonian.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Test\TestAgent.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="KQML.log" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup>
