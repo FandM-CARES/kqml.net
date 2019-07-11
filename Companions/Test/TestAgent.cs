@@ -1,13 +1,10 @@
 ﻿using KQML;
 using log4net;
 using log4net.Config;
-using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
+
 
 namespace Companions.Test
 {
@@ -19,17 +16,31 @@ namespace Companions.Test
         {
             MethodInfo method = typeof(TestAgent).GetMethod("TestAskReturnList");
             AddAsk("TestAskReturnList");
+            AddAchieve("TestAchieve");
+            AddAchieve("TestAchieveReturn");
+
 
         }
 
         public List<object> TestAskReturnList(KQMLObject input)
         {
-            Log.Debug("Testing ask with input"
+            Log.Debug("Testing ask with input "
                       + string.Join(" ", input));
             return new List<object> { "this is so hard" };
         }
 
-        
+        public void TestAchieve(KQMLObject input)
+        {
+            Log.Debug("Testing Achieve with input " + input);
+        }
+
+        public List<object> TestAchieveReturn(KQMLObject input)
+        {
+            Log.Debug("Testing Achieve with input " + input);
+            return new List<object> { "This", "is", "cool" };
+        }
+
+
         static void Main(string[] args)
         {
             _ = XmlConfigurator.Configure(new FileInfo("logging.xml"));

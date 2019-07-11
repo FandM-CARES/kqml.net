@@ -14,17 +14,12 @@ using System.Threading;
 
 namespace Companions
 {
-    //public delegate IEnumerable<object> AskDelegate(params object[] arguments);
-    //public delegate IEnumerable<object> AchieveDelegate(object argument);
+
 
     public class Netonian : KQMLModule
     {
         public DateTime StartTime;
         public int LocalPort;
-        //public Dictionary<string, AskDelegate> Asks;
-        //public Dictionary<string, AchieveDelegate> Achieves;
-        //public Dictionary<string, MethodInfo> Asks;
-        //public Dictionary<string, MethodInfo> Achieves;
         public List<string> Asks;
         public List<string> Achieves;
         public bool Ready;
@@ -36,6 +31,7 @@ namespace Companions
             LocalPort = 8950;
             StartTime = DateTime.Now;
             Asks = new List<string>();
+            Achieves = new List<string>();
             Ready = true;
             State = "idle";
 
@@ -64,6 +60,11 @@ namespace Companions
         public void AddAsk(string name)
         {
             Asks.Add(name);
+        }
+
+        public void AddAchieve(string name)
+        {
+            Achieves.Add(name);
         }
 
         public void Listen()
@@ -130,6 +131,7 @@ namespace Companions
 
         public override void ReceiveAchieve(KQMLPerformative msg, KQMLObject content)
         {
+
             if (content is KQMLList contentList)
             {
                 if (contentList.Head().Equals("task"))
@@ -153,8 +155,8 @@ namespace Companions
                 }
 
             }
-
-            ErrorReply(msg, $"Invalid content type: {content}");
+            else
+                ErrorReply(msg, $"Invalid content type: {content}");
         }
 
         public void HandleAchieveAction(KQMLPerformative msg, KQMLList contentList, KQMLObject action)
@@ -167,13 +169,17 @@ namespace Companions
                     {
                         List<KQMLObject> args = actionList.Data.Skip(1).ToList();
                         MethodInfo del = this.GetType().GetMethod(actionList.Head());
-                        //FIXME: type unclear
                         var results = del.Invoke(this, args.ToArray());
-                        Log.Debug("Return of achieve: " + results);
+
+                        dynamic resultsList = new KQMLString();
+                        if (results != null)
+                            resultsList = Listify((dynamic)results);
+                        else
+                            resultsList = new KQMLString("nil");
+                        Log.Debug("Return of achieve: " + resultsList);
 
                         KQMLPerformative reply = new KQMLPerformative("tell");
                         reply.Set("sender", Name);
-                        var resultsList = Listify((dynamic)results);
                         reply.Set("content", resultsList);
                         Reply(msg, reply);
                     }
@@ -189,7 +195,8 @@ namespace Companions
                     ErrorReply(msg, $"unknown action {actionList.Head()}");
                 }
             }
-            ErrorReply(msg, $"Invalid action type: {action}");
+            else
+                ErrorReply(msg, $"Invalid action type: {action}");
         }
 
         public override void ReceiveOtherPerformative(KQMLPerformative msg)
@@ -252,7 +259,7 @@ namespace Companions
             Reply(msg, replyMsg);
 
         }
-      
+
 
         //colons are NOT added for keywords when handling dictioaries. Add your own colons 
         public KQMLObject Listify(KeyValuePair<object, object> target)
@@ -265,7 +272,7 @@ namespace Companions
 
             return KQMLList.FromString($"({resultKey} . {resultValue})");
         }
-        
+
         // This override exists for RespondToBinding purposes
         public KQMLObject Listify(KeyValuePair<KQMLString, List<object>> target)
         {
@@ -423,6 +430,8 @@ namespace Companions
             reply.Set("content", replyContent);
             Reply(msg, reply);
         }
+
+
 
         private string Uptime()
         {

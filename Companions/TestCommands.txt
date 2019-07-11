@@ -1,2 +1,4 @@
 ﻿(ask-one :receiver secret-agent :content (TestAskReturnList hahaha ?return))
 (ask-one :receiver secret-agent :content (TestAskReturnList hahaha ?return) :response :bindings)
+(achieve :receiver secret-agent :content (task :action (TestAchieve haha)))
+(achieve :receiver secret-agent :content (task :action (TestAchieveReturn haha)))
