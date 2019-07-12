@@ -431,6 +431,33 @@ namespace Companions
             Reply(msg, reply);
         }
 
+        public void AchieveOnAgent(string receiver, object data)
+        {
+            
+            try
+            {
+                KQMLPerformative msg = new KQMLPerformative("achieve");
+                msg.Set("sender", Name);
+                msg.Set("receiver", receiver);
+                msg.Set("content", Listify((dynamic)data));
+                Connect(Host, Port);
+                Send(msg);
+
+            }
+            catch (ArgumentException)
+            {
+
+                Log.Error("Cannot Listify data of this type: " + data);
+
+            }
+            catch (Exception)
+            {
+                Log.Error("AchieveOnAgent failed for unknown reason");
+            }        
+
+
+        }
+
 
 
         private string Uptime()

@@ -60,7 +60,7 @@ namespace KQML
 
         }
 
-        private void Connect(string host, int port)
+        protected void Connect(string host, int port)
         {
             TcpClient client = new TcpClient(host, port);
             NetworkStream ns = client.GetStream();
@@ -339,8 +339,10 @@ namespace KQML
         public virtual void ReceiveRecruitAll(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: recruit-all"); }
 
-        public virtual void Receive_reply(KQMLPerformative msg, string content) { }
-        // logger.error(msg, "unexpected performative: reply");
+        public virtual void ReceiveReply(KQMLPerformative msg, string content)
+        {
+            Log.Error("Unexpected performative: reply");
+        }
 
         public virtual void ReceiveRequest(KQMLPerformative msg, KQMLObject content)
         { ErrorReply(msg, "unexpected performative: request"); }
@@ -348,17 +350,24 @@ namespace KQML
         public virtual void ReceiveEos(KQMLPerformative msg)
         { ErrorReply(msg, "unexpected performative: eos"); }
 
-        //public void eceive_error(KQMLPerformative msg)
-        //    // logger.error("Error Received: "%s"" % msg);
+        public virtual void ReceiveError(KQMLPerformative msg)
+        {
+            Log.Error($"Error Received: {msg}");
+        }
 
-        // public void Receive_sorry(KQMLPerformative msg)
-        //    // logger.error("unexpected performative: sorry");
+        public virtual void ReceiveSorry(KQMLPerformative msg)
+        {
+            Log.Error("unexpected performative: sorry");
+        }
 
-        // public void Receive_ready(KQMLPerformative msg)
-        //    // logger.error(msg, "unexpected performative: ready");
 
-        // public void Receive_next(KQMLPerformative msg)
-        //    { ErrorReply(msg, "unexpected performative: next"); }
+        public virtual void ReceiveReady(KQMLPerformative msg)
+        {
+            Log.Error($"Unexpected performative: ready");
+        }
+
+        public virtual void ReceiveNext(KQMLPerformative msg)
+        { ErrorReply(msg, "unexpected performative: next"); }
 
         public virtual void ReceiveRest(KQMLPerformative msg)
         { ErrorReply(msg, "unexpected performative: rest"); }
@@ -366,8 +375,10 @@ namespace KQML
         public virtual void ReceiveDiscard(KQMLPerformative msg)
         { ErrorReply(msg, "unexpected performative: discard"); }
 
-        //public void Receive_unregister(KQMLPerformative msg)
-        // logger.error(msg, "unexpected performative: unregister");
+        public void ReceiveUnregister(KQMLPerformative msg)
+        {
+            Log.Error("unexpected performative: unregister");
+        }
 
         public virtual void ReceiveOtherPerformative(KQMLPerformative msg)
         { ErrorReply(msg, "unexpected performative: " + msg.ToString()); }

@@ -19,6 +19,8 @@ namespace Companions.Test
             AddAchieve("TestAchieve");
             AddAchieve("TestAchieveReturn");
 
+            AchieveOnAgent("interaction-manager", "(processKioskUtterance \"Where is Professor Forbus' office?\")");
+
 
         }
 
