@@ -93,17 +93,7 @@ namespace KQML
             if (replyIdObj != null)
             {
                 replyId = replyIdObj.ToString().ToUpper();
-                //try
-                //{
-
-                //    value = ReplyContinuations[replyId];
-                //    value.receive(); // FIXME: what are you receiving??
-                //    ReplyContinuations.Remove(replyId);
-                //}
-                //catch (KeyNotFoundException)
-                //{
-
-                //}
+                
             }
             string vl = verb.ToLower();
             KQMLObject content = msg.Get("content");
@@ -120,7 +110,7 @@ namespace KQML
             char[] delimiters = { '-', '_' };
             string methodName = "Receive" +
                 string.Join("", vl.Split(delimiters).Select((string str) => str.First().ToString().ToUpper() + str.Substring(1)));
-            //string methodName = "receive_" + vl.Replace('-', '_');
+            
 
             if (contentMsgTypes.Contains(vl))
             {
@@ -164,7 +154,7 @@ namespace KQML
         {
 
             _log.Debug($"Adding replyId {replyId} with content \"{ cont} \"");
-            ReplyContinuations[replyId.ToUpper()] = cont;
+            // ReplyContinuations[replyId.ToUpper()] = cont;
         }
     }
 }

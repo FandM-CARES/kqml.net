@@ -20,8 +20,6 @@ namespace Companions.Test
             AddAchieve("TestAchieveReturn");
 
             AchieveOnAgent("interaction-manager", "(processKioskUtterance \"Where is Professor Forbus' office?\")");
-
-
         }
 
         public List<object> TestAskReturnList(KQMLObject input)

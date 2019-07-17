@@ -41,7 +41,7 @@ namespace KQML
             Testing = false;
             Name = "secret-agent";
             GroupName = "(secrets)";
-            //Socket = null;
+
             Debug = false;
 
             Dispatcher = null;
@@ -106,47 +106,9 @@ namespace KQML
             msg.Set("content", content);
             Send(msg);
         }
-        //public bool Connect(string host = null, int startPort = 0)
-        //{
-        //    if (string.IsNullOrEmpty(host))
-        //        host = Host;
-        //    if (startPort == 0)
-        //        startPort = Port;
-        //    if (!ScanForPort)
-        //        return Connect1(host, startPort, true);
-        //    else
-        //    {
-        //        int maxtries = MAX_PORT_TRIES;
-        //        for (int port = startPort; port < startPort + MAX_PORT_TRIES; port++)
-        //        {
-        //            bool conn = Connect1(host, port, false);
-        //            if (conn)
-        //                return true;
+       
 
-        //        }
-        //        return false;
-        //    }
-        //}
-
-        //private bool Connect1(string host, int port, bool verbose)
-        //{
-        //    try
-        //    {
-        //        //Crreate Socket
-        //        Socket.Connect(host, port);
-        //        return true;
-
-        //    }
-        //    catch (SocketException e)
-        //    {
-        //        if (verbose)
-        //        {
-        //            //Log error with e
-        //        }
-        //        return false;
-        //    }
-        //}
-
+       
         public void Send(KQMLPerformative msg)
         {
             try
@@ -210,9 +172,9 @@ namespace KQML
             Exit(0);
         }
 
-        public void HandleException(IOException e)
+        public void HandleException(Exception e)
         {
-            //throw new NotFiniteNumberException();
+            Log.Error(e);
         }
 
         public void ReceiveMessageMissingVerb(KQMLPerformative msg)
