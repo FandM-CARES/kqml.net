@@ -10,17 +10,28 @@ namespace KQML
     {
         private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
 
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KQMLToken"/> class that contains a specified string 
+        /// </summary>
+        /// <param name="s">The string to wrap</param>
         public KQMLToken(string s = "")
         {
             Data = s;
         }
 
+        /// <summary>
+        /// Changes underlying string to lower case
+        /// </summary>
+        /// <returns>Text representation of the <see cref="KQMLToken"/> in lower case</returns>
         public string Lower()
         {
             return Data.ToLower();
         }
 
+        /// <summary>
+        /// Changes underlying string to upper case
+        /// </summary>
+        /// <returns>Text representation of the <see cref="KQMLToken"/> in upper case</returns>
         public string Upper()
         {
             return Data.ToUpper();
@@ -35,6 +46,11 @@ namespace KQML
         {
             return Data;
         }
+
+        /// <summary>
+        /// Parses the text representation of the <see cref="KQMLToken"/> into package and bare name
+        /// </summary>
+        /// <returns>A list with package and bare name</returns>
         public List<string> ParsePackage()
         {
             string pattern1 = "([^:]+)::([^:]+)$";
@@ -67,15 +83,28 @@ namespace KQML
             return new List<string> { package, bareName };
         }
 
+        /// <summary>
+        /// Get the package of the <see cref="KQMLToken"/>
+        /// </summary>
+        /// <returns>The text representation of the package</returns>
         public string GetPackage()
         {
             return ParsePackage()[0];
         }
+
+        /// <summary>
+        /// Determines if the <see cref="KQMLToken"/> has a package
+        /// </summary>
+        /// <returns><c>true</c> if a package exists, <c>false</c> if it does not</returns>
         public bool HasPackage()
         {
             return !string.IsNullOrEmpty(GetPackage());
         }
 
+        /// <summary>
+        /// Determines if the <see cref="KQMLToken"/> is a keyword. 
+        /// </summary>
+        /// <returns><c>true</c> if it begins with a colon, <c>false</c> if it does not</returns>
         public bool IsKeyword()
         {
             return Data.StartsWith(":");
@@ -114,19 +143,7 @@ namespace KQML
             else
                 throw new ArgumentException("obj must be string or KQMLToken");
         }
-        public static implicit operator int(KQMLToken input)
-        {
-            int num;
-            if (int.TryParse(input.Data, out num))
-            {
-                return num;
-            }
-            throw new ArgumentException($"Cannot convert to type Int32: {input.Data}");
-        }
-
-
-
-
+       
         public override int GetHashCode()
         {
             return Data.GetHashCode();

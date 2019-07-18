@@ -32,7 +32,9 @@ namespace KQML
 
         public static ILog Log { get; } = LogManager.GetLogger(typeof(KQMLModule));
 
-
+        /// <summary>
+        /// Constructor. Should handle kwargs soon.
+        /// </summary>
         public KQMLModule()
         {
             Host = "localhost";
@@ -60,6 +62,11 @@ namespace KQML
 
         }
 
+        /// <summary>
+        /// Create a TcpClient at <paramref name="host"/>and <paramref name="port"/> set In and Out using its stream
+        /// </summary>
+        /// <param name="host"></param>
+        /// <param name="port"></param>
         protected void Connect(string host, int port)
         {
             TcpClient client = new TcpClient(host, port);
@@ -67,7 +74,9 @@ namespace KQML
             In = new StreamReader(ns);
             Out = new StreamWriter(ns);
         }
-
+        /// <summary>
+        /// Start KQMLModule by starting a the dispatcher
+        /// </summary>
         public void Start()
         {
             //Thread t = new Thread(new ThreadStart(Dispatcher.Start));
@@ -106,9 +115,12 @@ namespace KQML
             msg.Set("content", content);
             Send(msg);
         }
-       
 
-       
+
+        /// <summary>
+        /// Write a message to Out
+        /// </summary>
+        /// <param name="msg">Message to be sent</param>
         public void Send(KQMLPerformative msg)
         {
             try
@@ -127,6 +139,9 @@ namespace KQML
             }
         }
 
+        /// <summary>
+        /// Send a register message with namd of agent
+        /// </summary>
         public virtual void Register()
         {
             if (!string.IsNullOrEmpty(Name))
@@ -153,6 +168,9 @@ namespace KQML
             }
         }
 
+        /// <summary>
+        /// Sends a tell message that a module is ready
+        /// </summary>
         public void Ready()
         {
             KQMLPerformative msg = new KQMLPerformative("tell");
@@ -166,12 +184,18 @@ namespace KQML
             Environment.Exit(n);
         }
 
-
+        /// <summary>
+        /// Calls <see cref="Exit(int)"/> upon <see cref="EndOfStreamException"/>
+        /// </summary>
         public virtual void ReceiveEof()
         {
             Exit(0);
         }
 
+        /// <summary>
+        /// handles exception by logging
+        /// </summary>
+        /// <param name="e">exception to be handled</param>
         public void HandleException(Exception e)
         {
             Log.Error(e);
@@ -182,6 +206,11 @@ namespace KQML
             { ErrorReply(msg, "missing verb in performative"); }
         }
 
+        /// <summary>
+        /// Send a reply message that an error has occured
+        /// </summary>
+        /// <param name="msg">The mesage to be responded to</param>
+        /// <param name="comment">description of error</param>
         public void ErrorReply(KQMLPerformative msg, string comment)
         {
             KQMLPerformative replyMsg = new KQMLPerformative("error");
@@ -189,6 +218,11 @@ namespace KQML
             Reply(msg, replyMsg);
         }
 
+        /// <summary>
+        /// Format and send a reply message to msg with content replyMsg
+        /// </summary>
+        /// <param name="msg">message that needs replying to</param>
+        /// <param name="replyMsg">content for replying</param>
         public void Reply(KQMLPerformative msg, KQMLPerformative replyMsg)
         {
             KQMLObject sender = msg.Get("sender");
@@ -204,6 +238,7 @@ namespace KQML
             Send(replyMsg);
         }
 
+        // The following functions should be overriden. Classes extending KQMLModule should handle performatives accordingly
         public virtual void ReceiveMessageMissingContent(KQMLPerformative msg)
         {
             ErrorReply(msg, "missing content in performative");

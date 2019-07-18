@@ -13,7 +13,7 @@ namespace KQML
         public KQMLModule Receiver;
         public KQMLReader Reader;
         public string AgentName;
-        public Dictionary<string, string> ReplyContinuations;   //type unclear
+        public Dictionary<string, string> ReplyContinuations;   // use unclear 
         private int Counter;
         public string Name;
         public bool ShutdownIntiated;
@@ -32,6 +32,9 @@ namespace KQML
             ShutdownIntiated = false;
         }
 
+        /// <summary>
+        /// Start reading and dispatching messages from Reader.  
+        /// </summary>
         public void Start()
         {
             try
@@ -68,6 +71,10 @@ namespace KQML
             // Keyboard interrupt handled in module
         }
 
+        /// <summary>
+        /// Logs warning with msg
+        /// </summary>
+        /// <param name="msg"> Message associated with warning</param>
         public void Warn(string msg)
         {
             _log.Warn(msg);
@@ -79,6 +86,12 @@ namespace KQML
             ShutdownIntiated = true;
             Reader.Close();
         }
+        /// <summary>
+        /// Identify verb in msg and calls corresponding handler function. Replies with error if msg has no verb or verb has no corresponding action.
+        /// </summary>
+        /// <param name="msg">
+        /// Message to be dispatched. Should contain verb.
+        /// </param>
         private void DispatchMessage(KQMLPerformative msg)
         {
             _log.Debug("Dispatching message with content \"" + msg + "\"");

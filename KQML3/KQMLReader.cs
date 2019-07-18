@@ -15,8 +15,10 @@ namespace KQML
         public StringBuilder Inbuf;
         private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLReader));
         
-
-
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KQMLReader"/> class with the specified <see cref="StreamReader"/> 
+        /// </summary>
+        /// <param name="r">The <see cref="StreamReader"/>to be wrapped</param>
         public KQMLReader(StreamReader r)
         {
             Reader = r;
@@ -25,6 +27,9 @@ namespace KQML
             
         }
 
+        /// <summary>
+        /// Closes the <see cref="KQMLReader"/>
+        /// </summary>
         public void Close()
         {
             if (Reader != null)
@@ -49,6 +54,10 @@ namespace KQML
             Close();
         }
 
+        /// <summary>
+        /// Reads the next character of the input stream
+        /// </summary>
+        /// <returns>The next character from the input stream</returns>
         public char ReadChar()
         {
             char ch = (char)Reader.Read();
@@ -57,6 +66,11 @@ namespace KQML
 
         }
 
+        /// <summary>
+        /// Determines if a character is a special character
+        /// </summary>
+        /// <param name="ch"></param>
+        /// <returns><c>true</c> it is special, <c>false</c> if otherwise</returns>
         public static bool IsSpecial(char ch)
         {
             string specials = @"<>=+-*/&^~_@$%:.!?|";
@@ -79,6 +93,11 @@ namespace KQML
             return true;
         }
 
+        /// <summary>
+        /// Reads the next expression in the input stream
+        /// </summary>
+        /// <param name="backquoted"></param>
+        /// <returns>A KQML representation of the next expression</returns>
         public KQMLObject ReadExpr(bool backquoted = false)
         {
             int peek = Reader.Peek();
@@ -118,6 +137,10 @@ namespace KQML
             }
         }
 
+        /// <summary>
+        /// Read until the next non-char and treat result as a <see cref="KQMLToken"/>
+        /// </summary>
+        /// <returns>A <see cref="KQMLToken"/> representing the next group of characters</returns>
         public KQMLToken ReadToken()
         {
             char ch;
@@ -136,6 +159,10 @@ namespace KQML
             return new KQMLToken(buf.ToString());
         }
 
+        /// <summary>
+        /// Read the next group of characters as a <see cref="KQMLQuotation"/>
+        /// </summary>
+        /// <returns>A <see cref="KQMLQuotation"/> that representing the next group of characters</returns>
         public KQMLQuotation ReadQuotation(bool backquoted)
         {
             char ch = ReadChar();
@@ -147,12 +174,20 @@ namespace KQML
                 return null;
         }
 
+        /// <summary>
+        /// Read the next group of characters as a <see cref="KQMLString"/>
+        /// </summary>
+        /// <returns>KQML representation of the next group of characters</returns>
         public KQMLString ReadString()
         {
             char ch = ReadChar();
             return ch == '"' ? ReadQuotedString() : ReadHashedString();
         }
 
+        /// <summary>
+        /// Read the next group of characters as a <see cref="KQMLString"/> but hashed
+        /// </summary>
+        /// <returns>KQML representation of the next group of characters</returns>
         private KQMLString ReadHashedString()
         {
             StringBuilder buf = new StringBuilder();
@@ -187,6 +222,10 @@ namespace KQML
             return new KQMLString(buf.ToString());
         }
 
+        /// <summary>
+        /// Read the next group of characters as a <see cref="KQMLString" /> but quoted
+        /// </summary>
+        /// <returns>KQML representation of the next group of characters</returns>
         public KQMLString ReadQuotedString()
         {
             StringBuilder buf = new StringBuilder();
@@ -218,6 +257,13 @@ namespace KQML
             throw new NotImplementedException();
         }
 
+        /// <summary>
+        /// Read the next group of characters a <see cref="KQMLList"/>
+        /// </summary>
+        /// <param name="backquoted">Whether the list is backquoted</param>
+        /// <returns>KQML representation of the next group of characters as a list</returns>
+        /// <exception cref="KQMLBadOpenException">If the next group of characters does not begin with "("</exception>
+        /// <exception cref="KQMLBadCloseException">If the next expression does not end with ")"</exception>
         public KQMLList ReadList(bool backquoted = false)
         {
             KQMLList lst = new KQMLList();
@@ -253,6 +299,10 @@ namespace KQML
             return lst;
         }
 
+        /// <summary>
+        /// Read the next whitespace
+        /// </summary>
+        /// <exception cref="KQMLExpectedWhitespaceException">When the next character is not a whitespace</exception>
         public void ReadWhitespace()
         {
             char ch = ReadChar();
@@ -269,6 +319,9 @@ namespace KQML
 
         }
 
+        /// <summary>
+        /// Reads over consecutive incoming whitespaces
+        /// </summary>
         public void SkipWhitespace()
         {
             bool done = false;
@@ -282,6 +335,11 @@ namespace KQML
             }
         }
 
+        /// <summary>
+        /// Reads the next group of characters as a <see cref="KQMLPerformative"/>
+        /// </summary>
+        /// <returns>KQML representation of the next group of characters</returns>
+        /// <exception cref="KQMLExpectedListException">when the next group of characters cannot be represented as a <see cref="KQMLList"/></exception>
         public KQMLObject ReadPerformative()
         {
             Inbuf = new StringBuilder();
