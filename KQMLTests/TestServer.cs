@@ -12,13 +12,11 @@ namespace KQMLTests
     {
         
 
-        public static void Execute(string[] args)
+        public static void Execute()
         {
-
-            TcpListener server = null;
             try
             {
-                server = new TcpListener(IPAddress.Parse("127.0.0.1"), 9000);
+                TcpListener server = new TcpListener(IPAddress.Parse("127.0.0.1"), 9000);
                 server.Start();// Buffer for reading data
                 Byte[] bytes = new Byte[256];
                 String data = null;

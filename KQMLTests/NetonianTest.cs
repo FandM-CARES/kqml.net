@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Sockets;
+using System.Threading;
 using Companions;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
@@ -14,13 +15,10 @@ namespace KQMLTests
         [TestMethod]
         public void RegisterTest()
         {
+            Thread t = new Thread(TestServer.Execute);
             Netonian net = new Netonian();
-            .Start();
-
-            while(true)
-            {
-
-            }
+            
+            net.Register();
 
         }
     }

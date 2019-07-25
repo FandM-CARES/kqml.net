@@ -27,7 +27,7 @@ namespace KQML
         /// <param name="agentName">Name of the agent</param>
         public KQMLDispatcher(KQMLModule rec, KQMLReader inp, string agentName)
         {
-            _log.Debug("-----KQMLDispatcher ctor invoked-----");
+            
             Receiver = rec;
             Reader = inp;
             ReplyContinuations = new Dictionary<string, string>();
@@ -100,7 +100,7 @@ namespace KQML
         /// </param>
         private void DispatchMessage(KQMLPerformative msg)
         {
-            _log.Debug("Dispatching message with content \"" + msg + "\"");
+            _log.Debug("Dispatching \"" + msg + "\"");
             string verb = msg.Head();
             string replyId;  // type unclear  
             if (string.IsNullOrEmpty(verb))

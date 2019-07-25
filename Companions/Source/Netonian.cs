@@ -93,6 +93,7 @@ namespace Companions
             {
 
                 TcpClient client = server.AcceptTcpClient();
+                
 
                 // Wrap network stream in KQMLReader
                 NetworkStream ns = client.GetStream();
@@ -117,7 +118,7 @@ namespace Companions
         /// <param name="content">content of message</param>
         public override void ReceiveAskOne(KQMLPerformative msg, KQMLObject content)
         {
-            Log.Debug($"ReceiveAskOne called with {msg} and content {content}");
+            Log.Debug($"Received ask-one: {content}");
             if (!(content is KQMLList contentList))
                 throw new ArgumentException("content not a KQMLList");
             string pred = contentList.Head() ?? throw new ArgumentNullException("content is null");
@@ -155,7 +156,7 @@ namespace Companions
         /// <param name="content">content of message</param>
         public override void ReceiveAchieve(KQMLPerformative msg, KQMLObject content)
         {
-
+            Log.Debug($"Received achieve: {content}");
             if (content is KQMLList contentList)
             {
                 if (contentList.Head().Equals("task"))
@@ -564,6 +565,26 @@ namespace Companions
             catch (Exception)
             {
                 Log.Error("AchieveOnAgent failed for unknown reason");
+            }
+        }
+
+        public void AskAgent(string receiver, object data)
+        {
+            try
+            {
+                KQMLPerformative msg = new KQMLPerformative("ask-one");
+                msg.Set("sender", Name);
+                msg.Set("receiver", receiver);
+                msg.Set("language", "fire");
+                if (!(data is KQMLList))
+                    msg.Set("content", Listify((dynamic)data));
+                else
+                    msg.Set("content", data);
+                Connect(Host, Port);
+                Send(msg);
+            } catch (Exception)
+            {
+                Log.Error("AskAgent failed for unknown reason");
             }
         }
 

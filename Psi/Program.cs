@@ -17,7 +17,7 @@ namespace KQML
             _ = XmlConfigurator.Configure(new FileInfo("logging.xml"));
             using (Pipeline pipeline = Pipeline.Create())
             {
-                var test = new InteractionManagerInterface(pipeline, "processKioskUtterance", "interaction-manager");
+                var test = new SessionReasonerInterface(pipeline);
                 test.POut.Do(p => Console.WriteLine(p));
                 var input = Generators.Sequence(pipeline, Input(), TimeSpan.FromMilliseconds(10));
                 input.PipeTo(test.PIn);
