@@ -24,7 +24,7 @@ namespace KQML
             // need to call super.Start() somewhere, probably once the pipeline is started
         }
 
-        protected void Receive(TIn data, Envelope envelope)
+        protected virtual void Receive(TIn data, Envelope envelope)
         {
             var inputString = data.ToString();
             var performative = new KQMLPerformative(inputString);
@@ -42,5 +42,19 @@ namespace KQML
             POut.Post((TOut)content, DateTime.Now);
         }
 
+        public KQMLList MakeAction(string action, List<object> args)
+        {
+            KQMLList contentList = new KQMLList("task");
+            KQMLList combinedAction = new KQMLList(args);
+            combinedAction.Push(action);
+            contentList.Set("action", combinedAction);
+            // Console.WriteLine(contentList);
+            return contentList;
+
+        }
+
+        
+
+        
     }
 }

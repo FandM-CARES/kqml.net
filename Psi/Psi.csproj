@@ -72,6 +72,7 @@
     <Compile Include="PsiCompanion.cs" />
     <Compile Include="PsiKQML.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Samples\InteractionManagerInterface.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
@@ -86,6 +87,11 @@
       <Project>{10d1176e-f22d-489e-95d2-08a2e6566968}</Project>
       <Name>KQML</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="logging.xml">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

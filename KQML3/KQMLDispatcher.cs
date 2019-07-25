@@ -19,6 +19,12 @@ namespace KQML
         public bool ShutdownIntiated;
         private static readonly ILog _log = LogManager.GetLogger(typeof(KQMLDispatcher));
 
+        /// <summary>
+        /// Initializes a new instance of the <see cref="KQMLDispatcher"/> class with specified receiver, input and name
+        /// </summary>
+        /// <param name="rec">The agent to handle message dispatch</param>
+        /// <param name="inp">Reader from which the <see cref="KQMLDispatcher"/> reads</param>
+        /// <param name="agentName">Name of the agent</param>
         public KQMLDispatcher(KQMLModule rec, KQMLReader inp, string agentName)
         {
             _log.Debug("-----KQMLDispatcher ctor invoked-----");

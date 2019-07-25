@@ -328,7 +328,8 @@ namespace Companions
             return KQMLList.FromString($"({resultKey} . {resultValue})");
         }
         /// <summary>
-        /// 
+        ///Converts <paramref name="target"/> into a List
+
         /// </summary>
         /// <param name="target"></param>
         /// <returns>A KQMLList in the form of (key . value)</returns>
@@ -552,14 +553,14 @@ namespace Companions
                 KQMLPerformative msg = new KQMLPerformative("achieve");
                 msg.Set("sender", Name);
                 msg.Set("receiver", receiver);
-                msg.Set("content", Listify((dynamic)data));
+                if(!(data is KQMLList))
+                    msg.Set("content", Listify((dynamic)data));
+                else
+                    msg.Set("content", data);
                 Connect(Host, Port);
                 Send(msg);
             }
-            catch (ArgumentException)
-            {
-                Log.Error("Cannot Listify data of this type: " + data);
-            }
+          
             catch (Exception)
             {
                 Log.Error("AchieveOnAgent failed for unknown reason");
@@ -571,7 +572,7 @@ namespace Companions
         /// Calculates how long the agent has been connected
         /// </summary>
         /// <returns>String representation of agent's uptime</returns>
-        private string Uptime()
+        public string Uptime()
         {
             DateTime now = DateTime.Now;
             int years = now.Year - StartTime.Year;

@@ -36,7 +36,7 @@ namespace KQML
         /// <param name="stream">The stream to write to</param>
         public void Write(StreamWriter stream)
         {
-            stream.Write(Data);
+            stream.Write('"' + Data + '"');
         }
 
         public override bool Equals(object obj)
@@ -56,7 +56,7 @@ namespace KQML
 
         public override string ToString()
         {
-            return Data;
+            return '"' + Data + '"';
         }
 
         /// <summary>

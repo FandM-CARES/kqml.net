@@ -55,10 +55,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="KQMLTokenTest.cs" />
+    <Compile Include="NetonianTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="KQMLStringTest.cs" />
     <Compile Include="KQMLPerformativeTest.cs" />
     <Compile Include="KQMLListTest.cs" />
+    <Compile Include="TestServer.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
@@ -69,6 +71,10 @@
     </Content>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\Companions\Companions.csproj">
+      <Project>{DF281149-B615-4192-8F7C-96D7680CB87C}</Project>
+      <Name>Companions</Name>
+    </ProjectReference>
     <ProjectReference Include="..\KQML3\KQML.csproj">
       <Project>{10d1176e-f22d-489e-95d2-08a2e6566968}</Project>
       <Name>KQML</Name>

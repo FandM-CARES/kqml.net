@@ -1,0 +1,32 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Microsoft.Psi;
+
+
+namespace KQML.Samples
+{
+    public class InteractionManagerInterface : PsiCompanion<string, string>
+    {
+        string Action;
+        string Receiver;
+
+        public InteractionManagerInterface(Pipeline pipeline, string action, string receiver) : base(pipeline)
+        {
+            Action = action;
+            Receiver = receiver;
+            Name = "IM-interface";
+        }
+        protected override void Receive(string data, Envelope envelope)
+        {
+            AchieveOnAgent(Receiver, MakeAction(Action, new List<object> { data }));
+        }
+
+        public override void ReceiveAchieve(KQMLPerformative msg, KQMLObject content) 
+        {
+            POut.Post(content.ToString(), DateTime.Now);
+        }
+    }
+}

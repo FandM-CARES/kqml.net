@@ -45,6 +45,7 @@ namespace Companions.Test
         {
             _ = XmlConfigurator.Configure(new FileInfo("logging.xml"));
             TestAgent agent = new TestAgent();
+            agent.AchieveOnAgent("interaction-manager", "(processKioskUtterance \"Where is Professor Forbus?\")");
             agent.Start();
 
         }
