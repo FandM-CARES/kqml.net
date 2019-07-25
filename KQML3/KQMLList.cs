@@ -21,7 +21,7 @@ namespace KQML
         public KQMLList(string s)
         {
             Data = new List<KQMLObject>();
-            Append(s); 
+            Append(s);
         }
 
         /// <summary>
@@ -32,17 +32,7 @@ namespace KQML
         {
             Data = new List<KQMLObject>();
             foreach (object o in obj)
-            {
-                if (o is string)
-                {
-                    string s = (string)o;
-                    Append(s);
-                }
-                else if (o is KQMLObject ko)
-                    Append(ko);
-                else
-                    continue;
-            }
+                Append(o);
         }
         /// <summary>
         /// Initializes a new instance of <see cref="KQMList"/> class that contains elements copied from the spceified list of KQMLObject
@@ -113,21 +103,33 @@ namespace KQML
         }
 
         /// <summary>
-        /// Adds a string to the end of the <see cref="KQMLList"/> as an KQMLToken
+        /// Adds an object to the end of the <see cref="KQMLList"/>. 
+        /// If <paramref name="obj"/> is not a <see cref="KQMLObject"/>, 
+        /// it will be added as a <see cref="KQMLToken"/> of its text representation
         /// </summary>
-        /// <param name="str">The string to be added.</param>
-        public void Append(string str)
+        /// <param name="obj">The object to be added.</param>
+        /// <remarks>If <paramref name="obj"/> is a string, not wrapped in parentheses and has spaces, 
+        /// it will be added as a KQMLString. Otherwise it will be added as a <see cref="KQMLToken"/></remarks>
+        public void Append(object obj)
         {
-            KQMLToken token = new KQMLToken(str);
-            Data.Add(token);
-        }
-        /// <summary>
-        /// Adds a KQMLObject to the end of the <see cref="KQMLList"/>
-        /// </summary>
-        /// <param name="obj">The KQMLObject to be added.</param>
-        public void Append(KQMLObject obj)
-        {
-            Data.Add(obj);
+            if (obj is string str)
+            {
+                if (str.IndexOf(' ') != -1 && !str.StartsWith("("))
+                {
+                    KQMLString kstring = new KQMLString(str);
+                    Data.Add(kstring);
+
+                }
+                else
+                {
+                    KQMLToken token = new KQMLToken(str);
+                    Data.Add(token);
+                }
+            }
+            else if (obj is KQMLObject kqmlo)
+                Data.Add(kqmlo);
+            else
+                Data.Add(new KQMLToken(obj.ToString()));
         }
 
         /// <summary>
