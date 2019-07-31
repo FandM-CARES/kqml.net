@@ -94,12 +94,10 @@ namespace KQML
         public string Gets(string keyword)
         {
             KQMLObject param = Get(keyword);
-            if (!param.Equals(null))
-            {
-                return param.ToString();
+           
+            return param?.ToString();
                 //using ToString instead of StringValue because not all implementations of KQMLObject has StringValue
-            }
-            return null;
+            
         }
 
         /// <summary>

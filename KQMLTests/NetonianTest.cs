@@ -3,6 +3,7 @@ using System.Net;
 using System.Net.Sockets;
 using System.Threading;
 using Companions;
+using KQML;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace KQMLTests
@@ -10,16 +11,26 @@ namespace KQMLTests
     [TestClass]
     public class NetonianTest
     {
+        TcpListener server;
+        TestServer test;
         
         
         [TestMethod]
         public void RegisterTest()
         {
-            Thread t = new Thread(TestServer.Execute);
+            //server = new TcpListener(IPAddress.Parse("127.0.0.1"), 9000);
+            //server.Start();
+            test = new TestServer();
+            test.Execute();
+
             Netonian net = new Netonian();
             
             net.Register();
-
+            KQMLList list = KQMLList.FromString(test.stuff);
+            Assert.AreEqual("secret-agent", list.Gets("sender"));
+            Assert.AreEqual("facilitator", list.Gets("receiver"));
+            Assert.AreEqual("(\"socket://127.0.0.1:8950\" nil nil 8950)", list.Gets("content"));
+            test.Stop();
         }
     }
 }

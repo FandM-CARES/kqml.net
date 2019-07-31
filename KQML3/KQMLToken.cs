@@ -119,13 +119,16 @@ namespace KQML
                 KQMLToken tok = (KQMLToken)obj;
                 return Data.Equals(tok.Data);
             }
-            else if (obj is string)
-            {
-                string str = (string)obj;
-                return Data.Equals(str);
-            }
-            else
-                throw new ArgumentException("obj must be string or KQMLToken");
+            else return Data.Equals(obj.ToString());
+            //else if (obj is string)
+            //{
+            //    string str = (string)obj;
+            //    return Data.Equals(str);
+            //}
+
+            //else
+            //    return ;
+            
         }
 
         public bool EqualsIgnoreCase(object obj)

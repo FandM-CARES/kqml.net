@@ -140,7 +140,7 @@ namespace KQML
         }
 
         /// <summary>
-        /// Send a register message with namd of agent
+        /// Send a register message with name of agent
         /// </summary>
         public virtual void Register()
         {

@@ -1,34 +1,57 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace KQMLTests
 {
     class TestServer
     {
-        
+        public TcpListener Server;
+        public bool Running;
+        public string stuff;
 
-        public static void Execute()
+
+
+        public void Execute()
         {
             try
             {
-                TcpListener server = new TcpListener(IPAddress.Parse("127.0.0.1"), 9000);
-                server.Start();// Buffer for reading data
+                Server = new TcpListener(IPAddress.Parse("127.0.0.1"), 9000);
+                Server.Start();
+                Running = true;
+
+                Thread t = new Thread(new ThreadStart(this.Listening));
+                t.Start();
+
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+        }
+
+
+
+        public void Listening()
+        {
+            try
+            {
                 Byte[] bytes = new Byte[256];
                 String data = null;
-
-                // Enter the listening loop.
-                while (true)
+                while (Running)
                 {
                     Console.Write("Waiting for a connection... ");
 
                     // Perform a blocking call to accept requests.
                     // You could also user server.AcceptSocket() here.
-                    TcpClient client = server.AcceptTcpClient();
+                    TcpClient client = Server.AcceptTcpClient();
                     Console.WriteLine("Connected!");
 
                     data = null;
@@ -43,29 +66,27 @@ namespace KQMLTests
                     {
                         // Translate data bytes to a ASCII string.
                         data = System.Text.Encoding.ASCII.GetString(bytes, 0, i);
-                        Console.WriteLine("Received: {0}", data);
+                        stuff = data;
 
-                        // Process the data sent by the client.
-                        data = data.ToUpper();
-
-                        byte[] msg = System.Text.Encoding.ASCII.GetBytes(data);
-
-                        // Send back a response.
-                        stream.Write(msg, 0, msg.Length);
-                        Console.WriteLine("Sent: {0}", data);
                     }
 
                     // Shutdown and end connection
                     client.Close();
                 }
             }
-            catch (Exception)
+            catch (IOException e)
             {
-
-                throw;
+                Console.WriteLine(e);
             }
         }
 
-
+        public void Stop()
+        {
+            Running = false;
+            Server.Stop();
+        }
     }
+
+
 }
+
