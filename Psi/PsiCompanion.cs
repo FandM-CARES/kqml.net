@@ -42,6 +42,12 @@ namespace KQML
             POut.Post((TOut)content, DateTime.Now);
         }
 
+        /// <summary>
+        /// Generates content value for achieve using a specified action and its arguments
+        /// </summary>
+        /// <param name="action">Action to be achieved</param>
+        /// <param name="args">arguments for action</param>
+        /// <returns></returns>
         public KQMLList MakeAction(string action, List<object> args)
         {
             KQMLList contentList = new KQMLList("task");

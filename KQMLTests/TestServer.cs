@@ -13,18 +13,20 @@ namespace KQMLTests
     class TestServer
     {
         public TcpListener Server;
-        public bool Running;
+        public TcpClient Client;
+        public bool ServerRunning;
+        public bool ClientRunning;
         public string stuff;
 
 
 
-        public void Execute()
+        public void StartServer()
         {
             try
             {
                 Server = new TcpListener(IPAddress.Parse("127.0.0.1"), 9000);
                 Server.Start();
-                Running = true;
+                ServerRunning = true;
 
                 Thread t = new Thread(new ThreadStart(this.Listening));
                 t.Start();
@@ -37,6 +39,45 @@ namespace KQMLTests
             }
         }
 
+        public void StartAchieveTestClient()
+        {
+            try
+            {
+                Client = new TcpClient("127.0.0.1", 8950);
+                ClientRunning = true;
+
+                Thread t = new Thread(new ThreadStart(SendAchieve));
+                t.Start();
+            }
+            catch (Exception)
+            {
+                throw;
+            }
+
+        }
+
+        public void SendAchieve()
+        {
+            try
+            {
+                byte[] bytes = new byte[256];
+                string data = null;
+
+                NetworkStream stream = Client.GetStream();
+
+                StreamWriter sw = new StreamWriter(stream);
+                sw.Write("(achieve :receiver secret-agent :content (task :action (TestAchieve haha)))");
+
+                sw.Close();
+
+                // Shutdown and end connection
+                Client.Close();
+            }
+            catch (IOException e)
+            {
+                Console.WriteLine(e);
+            }
+        }
 
 
         public void Listening()
@@ -45,7 +86,7 @@ namespace KQMLTests
             {
                 Byte[] bytes = new Byte[256];
                 String data = null;
-                while (Running)
+                while (ServerRunning)
                 {
                     Console.Write("Waiting for a connection... ");
 
@@ -82,7 +123,7 @@ namespace KQMLTests
 
         public void Stop()
         {
-            Running = false;
+            ServerRunning = false;
             Server.Stop();
         }
     }

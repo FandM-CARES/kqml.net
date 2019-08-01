@@ -13,11 +13,18 @@ namespace KQML.Samples
         string Action;
         string Receiver;
 
+        /// <summary>
+        /// Initializes a new instance of the class with specified pipline and receiver. 
+        /// It sends an achieve with a specified action. 
+        /// </summary>
+        /// <param name="pipeline">Psi stuff</param>
+        /// <param name="action">The action to achieve</param>
+        /// <param name="receiver">receiver of messages</param>
         public InteractionManagerInterface(Pipeline pipeline, string action, string receiver) : base(pipeline)
         {
             Action = action;
             Receiver = receiver;
-            Name = "IM-interface";
+            //Name = "IM-interface";
         }
         protected override void Receive(string data, Envelope envelope)
         {
@@ -27,6 +34,12 @@ namespace KQML.Samples
         public override void ReceiveAchieve(KQMLPerformative msg, KQMLObject content) 
         {
             POut.Post(content.ToString(), DateTime.Now);
+        }
+
+        public override void ReceiveTell(KQMLPerformative msg, KQMLObject content)
+        {
+            POut.Post(content.ToString(), DateTime.Now);
+
         }
     }
 }

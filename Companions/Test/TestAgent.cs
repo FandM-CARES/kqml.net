@@ -8,22 +8,29 @@ using System.Reflection;
 
 namespace Companions.Test
 {
-    class TestAgent : Netonian
+    public class TestAgent : Netonian
     {
-        
+
+        public volatile bool TestAchieveCalled;
+        public volatile bool TestAskReturnListCalled;
+        public volatile bool TestAchieveReturnCalled;
+        private readonly object truthLock;
+
         private static readonly new ILog Log = LogManager.GetLogger(typeof(TestAgent));
         public TestAgent()
         {
-            MethodInfo method = typeof(TestAgent).GetMethod("TestAskReturnList");
+            TestAchieveCalled = false;
+            TestAskReturnListCalled = false;
+
             AddAsk("TestAskReturnList");
             AddAchieve("TestAchieve");
             AddAchieve("TestAchieveReturn");
-
         }
 
-        
+
         public List<object> TestAskReturnList(KQMLObject input)
         {
+            TestAskReturnListCalled = true;
             Log.Debug("Testing ask with input "
                       + string.Join(" ", input));
             return new List<object> { "this is so hard" };
@@ -31,12 +38,16 @@ namespace Companions.Test
 
         public void TestAchieve(KQMLObject input)
         {
+            TestAchieveCalled = true;
             Log.Debug("Testing Achieve with input " + input);
+            Log.Debug("TestAchieveCalled should now be " + TestAchieveCalled);
         }
 
         public List<object> TestAchieveReturn(KQMLObject input)
         {
-            Log.Debug("Testing Achieve with input " + input);
+            TestAchieveReturnCalled = true;
+            Log.Debug("Testing AchieveReturn with input " + input);
+            Log.Debug("TestAchieveReturnCalled should now be " + TestAchieveReturnCalled);
             return new List<object> { "This", "is", "cool" };
         }
 
