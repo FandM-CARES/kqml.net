@@ -16,7 +16,7 @@ namespace KQML
 
         public Emitter<TOut> POut { get; }
 
-        public PsiCompanion(Pipeline pipeline)
+        public PsiCompanion(Pipeline pipeline,string name) : base(name)
         {
             this.POut = pipeline.CreateEmitter<TOut>(this, nameof(this.Out));
             this.PIn = pipeline.CreateReceiver<TIn>(this, this.Receive, nameof(this.In));
