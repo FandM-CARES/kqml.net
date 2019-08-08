@@ -21,10 +21,22 @@ namespace Companions
     {
         public DateTime StartTime;
         public int LocalPort;
+
+        // Tracking functions related to asks and achieves
         public List<string> Asks;
         public List<string> Achieves;
-        public bool Ready;
+
+        // Subscription stuff
+        public Dictionary<string, List<object>> SubscribeDataNew;
+        public Dictionary<string, List<object>> SubscribeDataOld;
+        public Dictionary<string, List<KQMLList>> Subscribers;
+        public int PollingInterval { get; private set; }
+
+        // Miscellaneous 
+        public bool IsReady;
         public string State;
+
+
         public static ILog Log { get; } = LogManager.GetLogger(typeof(Netonian));
 
         /// <summary>
@@ -32,19 +44,27 @@ namespace Companions
         /// </summary>
         public Netonian() : base()
         {
+            Name = "Netonian";
             LocalPort = 8950;
             StartTime = DateTime.Now;
             Asks = new List<string>();
             Achieves = new List<string>();
-            Ready = true;
+            IsReady = true;
             State = "idle";
 
-            Thread t = new Thread(new ThreadStart(Listen));
-            t.Start();
+            SubscribeDataNew = new Dictionary<string, List<object>>();
+            SubscribeDataOld = new Dictionary<string, List<object>>();
+            Subscribers = new Dictionary<string, List<KQMLList>>();
+            PollingInterval = 1;
+
+            Thread listenThread = new Thread(new ThreadStart(Listen));
+            Thread pollThread = new Thread(new ThreadStart(PollForSubcriptionUpdates));
+            listenThread.Start();
+            pollThread.Start();
         }
 
         /// <summary>
-        /// Sends a register message to Companions with Name. 
+        /// Sends a register message containing name of this agent to Companions.
         /// </summary>
         /// <remarks>Agent should appear in session manager as a result</remarks>
         public override void Register()
@@ -62,12 +82,26 @@ namespace Companions
         }
 
         /// <summary>
+        /// Closes the existing connection. Not sure if it works 
+        /// </summary>
+        public void CloseSocket()
+        {
+            // TODO: CloseSocket doesn't actually closes socket. just shuts down dispatcher
+            Dispatcher.Shutdown();
+            
+        }
+
+        /// <summary>
         /// Add name to the list of possible Asks
         /// </summary>
         /// <param name="name">name of function to be used with ask-one</param>
-        public void AddAsk(string name)
+        public void AddAsk(string name, string pattern, bool subscribable = false)
         {
             Asks.Add(name);
+            if (subscribable)
+                Subscribers[pattern] = new List<KQMLList>();
+            else
+                AdvertiseSubscribe(pattern);
         }
 
         /// <summary>
@@ -93,7 +127,7 @@ namespace Companions
             {
 
                 TcpClient client = server.AcceptTcpClient();
-                
+
 
                 // Wrap network stream in KQMLReader
                 NetworkStream ns = client.GetStream();
@@ -199,7 +233,7 @@ namespace Companions
                     try
                     {
                         List<KQMLObject> args = actionList.Data.Skip(1).ToList();
-                        MethodInfo del = this.GetType().GetMethod(actionList.Head());
+                        MethodInfo del = GetType().GetMethod(actionList.Head());
                         var results = del.Invoke(this, args.ToArray());
 
                         dynamic resultsList = new KQMLString();
@@ -242,6 +276,123 @@ namespace Companions
             {
                 ErrorReply(msg, $"unexpected performative: {msg}");
 
+            }
+        }
+
+        /// <summary>
+        /// Broadcast this agent's ability to answer a query with a specified pattern 
+        /// </summary>
+        /// <param name="pattern">The pattern of the answerable query</param>
+        public void Advertise(string pattern)
+        {
+            Connect(Host, Port);
+            KQMLPerformative msg = new KQMLPerformative("advertise");
+            msg.Set("sender", Name);
+            msg.Set("receiver", "facilitator");
+            string replyId = "id" + ReplyIdCounter;
+            ++ReplyIdCounter;
+            KQMLPerformative content = new KQMLPerformative("ask-all");
+            content.Set("receiver", Name);
+            content.Set("in-reply-to", replyId);
+            content.Set("content", pattern);
+            msg.Set("content", content);
+            Send(msg);
+
+        }
+
+        /// <summary>
+        /// Broadcast this agent's ability to answer and continuously update a query of a specified pattern.
+        /// Allows for subscription.
+        /// </summary>
+        /// <param name="pattern">The pattern of subscribable query </param>
+        public void AdvertiseSubscribe(string pattern)
+        {
+            Connect(Host, Port);
+
+            KQMLPerformative msg = new KQMLPerformative("advertise");
+            msg.Set("sender", Name);
+            msg.Set("receiver", "facilitator");
+            string replyId = "id" + ReplyIdCounter;
+            msg.Set("reply-with", replyId);
+            ++ReplyIdCounter;
+
+            KQMLPerformative subscribe = new KQMLPerformative("subscribe");
+            subscribe.Set("receiver", Name);
+            subscribe.Set("in-reply-to", replyId);
+
+            KQMLPerformative content = new KQMLPerformative("ask-all");
+            content.Set("receiver", Name);
+            content.Set("in-reply-to", replyId);
+            content.Set("content", pattern);
+
+            subscribe.Set("content", content);
+            msg.Set("content", subscribe);
+
+            Send(msg);
+            // TODO: Close socket?
+
+        }
+
+        /// <summary>
+        /// Checks if any subscription has new values. 
+        /// If so, sends new values to subscribers and mark them as old.
+        /// Runs repeatedly on a thread with intervals of <see cref="PollingInterval"/>
+        /// </summary>
+        public void PollForSubcriptionUpdates()
+        {
+            Log.Debug("Running subscription poller...");
+
+            while (IsReady)
+            {
+                foreach (KeyValuePair<string, List<object>> kvp in SubscribeDataNew)
+                {
+                    string query = kvp.Key;
+                    List<object> newData = kvp.Value;
+
+                    if (newData != null)
+                    {
+                        foreach (KQMLList msg in Subscribers[query])
+                        {
+                            // Send new data to all subscribers of a query/pattern
+                            try
+                            {
+                                KQMLPerformative ask = (KQMLPerformative)msg.Get("content");
+                                query = ask.Gets("content");
+                                Log.Debug($"Sending subscription update for {query}");
+                                KQMLObject respType = ask.Get("response");
+                                RespondToQuery(KQMLPerformative.ListToPerformative(msg), KQMLList.FromString(query), newData, respType);
+                                // Mark sent data as old
+                                SubscribeDataOld[query] = newData;
+
+                            }
+                            catch (InvalidCastException)
+                            {
+                                Log.Error($"Cast failed, expected KQMLPerformative");
+
+                            }
+                        }
+                    }
+                }
+                // Reset new data dictionary
+                foreach (string query in SubscribeDataNew.Keys)
+                {
+                    SubscribeDataNew[query] = null;
+                }
+                Thread.Sleep(PollingInterval);
+            }
+        }
+
+        /// <summary>
+        /// Check if incoming results to the specified query is new. If so, store results in <see cref="SubscribeDataNew"/>
+        /// </summary>
+        /// <param name="query"></param>
+        /// <param name="args"></param>
+        public void UpdateQuery(string query, params object[] args)
+        {
+            if (SubscribeDataOld.ContainsKey(query) && SubscribeDataOld[query].Equals(args.ToList()))
+            {
+                Log.Debug($"Updating {query} with {args}");
+                SubscribeDataNew[query] = args.ToList();
             }
         }
 
@@ -522,6 +673,37 @@ namespace Companions
         }
 
         /// <summary>
+        /// Add a subscription upon receiving a subscribe message.
+        /// </summary>
+        /// <param name="msg"></param>
+        /// <param name="content"></param>
+        public override void ReceiveSubscribe(KQMLPerformative msg, KQMLObject content)
+        {
+            Log.Debug($"Received subscribe: {content}");
+            if (content is KQMLList contentList)
+            {
+                if (contentList.Head().Equals("ask-all"))
+                {
+                    KQMLList query = (KQMLList)contentList.Get("content");
+                    string queryString = query.ToString();
+                    if (Asks.Contains(query.Head()) && Subscribers.ContainsKey(queryString))
+                    {
+                        Subscribers[queryString].Add(msg);
+                        SubscribeDataOld[queryString] = null;
+                        SubscribeDataNew[queryString] = null;
+
+                        KQMLPerformative replyMsg = new KQMLPerformative("tell");
+                        replyMsg.Set("sender", Name);
+                        replyMsg.Set("content", ":ok");
+                        Reply(msg, replyMsg);
+                    }
+                }
+            }
+            else
+                ErrorReply(msg, "content should be a KQMLList");
+        }
+
+        /// <summary>
         /// Send a reply to a ping message
         /// </summary>
         /// <param name="msg">The message to be responded to</param>
@@ -554,14 +736,14 @@ namespace Companions
                 KQMLPerformative msg = new KQMLPerformative("achieve");
                 msg.Set("sender", Name);
                 msg.Set("receiver", receiver);
-                if(!(data is KQMLList))
+                if (!(data is KQMLList))
                     msg.Set("content", Listify((dynamic)data));
                 else
                     msg.Set("content", data);
                 Connect(Host, Port);
                 Send(msg);
             }
-          
+
             catch (Exception)
             {
                 Log.Error("AchieveOnAgent failed for unknown reason");
@@ -582,10 +764,31 @@ namespace Companions
                     msg.Set("content", data);
                 Connect(Host, Port);
                 Send(msg);
-            } catch (Exception)
+            }
+            catch (Exception)
             {
                 Log.Error("AskAgent failed for unknown reason");
             }
+        }
+
+        /// <summary>
+        /// Inserts data to an agent
+        /// </summary>
+        /// <param name="receiver">Receiver of the insertion.</param>
+        /// <param name="data">Content of the insertion.</param>
+        /// <param name="wmOnly">Whether the insertion is only for working memory</param>
+        public void InsertData(string receiver, object data, bool wmOnly = false)
+        {
+            KQMLPerformative msg = new KQMLPerformative("insert");
+            msg.Set("sender", Name);
+            msg.Set("receiver", receiver);
+            if (wmOnly)
+            {
+                msg.Append(":wm_only?");
+            }
+            msg.Set("content", Listify((dynamic)data));
+            Connect(Host, Port);
+            Send(msg);
         }
 
 

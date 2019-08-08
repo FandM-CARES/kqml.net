@@ -27,6 +27,7 @@ namespace KQML
         /// <returns></returns>
         public static KQMLPerformative ListToPerformative(KQMLList list)
         {
+            Validate(list.Data);
             return new KQMLPerformative(list.Data);
         }
 

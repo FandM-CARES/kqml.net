@@ -65,7 +65,7 @@ namespace KQML
             {
                 _log.Error("Invalid argument in Start");
             }
-            catch (KQMLExpectedListException e)
+            catch (KQMLExpectedListException)
             {
                 _log.Error("ReadPerformative failed. Expected a list");
             }

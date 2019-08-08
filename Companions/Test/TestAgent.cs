@@ -4,7 +4,7 @@ using log4net.Config;
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
-
+using System.Threading;
 
 namespace Companions.Test
 {
@@ -14,7 +14,6 @@ namespace Companions.Test
         public volatile bool TestAchieveCalled;
         public volatile bool TestAskReturnListCalled;
         public volatile bool TestAchieveReturnCalled;
-        private readonly object truthLock;
 
         private static readonly new ILog Log = LogManager.GetLogger(typeof(TestAgent));
         public TestAgent()
@@ -22,10 +21,12 @@ namespace Companions.Test
             TestAchieveCalled = false;
             TestAskReturnListCalled = false;
 
-            AddAsk("TestAskReturnList");
+            AddAsk("TestAskReturnList", "(TestAskReturnList ?_input ?return)");
             AddAchieve("TestAchieve");
             AddAchieve("TestAchieveReturn");
         }
+
+        
 
 
         public List<object> TestAskReturnList(KQMLObject input)
@@ -51,11 +52,22 @@ namespace Companions.Test
             return new List<object> { "This", "is", "cool" };
         }
 
+        public void TestInsertIntoCompanion(object data)
+        {
+            Log.Debug($"Testing inserting data into companion with data: {data}");
+            InsertData("session-reasoner", data);
+
+        }
+
+
 
         static void Main(string[] args)
         {
             _ = XmlConfigurator.Configure(new FileInfo("logging.xml"));
             TestAgent agent = new TestAgent();
+            Thread.Sleep(20);
+            agent.TestInsertIntoCompanion("(Started Netonian)");
+
             agent.AchieveOnAgent("interaction-manager", "(processKioskUtterance \"Where is Professor Forbus?\")");
             agent.Start();
 

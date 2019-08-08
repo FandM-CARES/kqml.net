@@ -24,7 +24,7 @@ namespace KQML.Samples
         {
             Action = action;
             Receiver = receiver;
-            //Name = "IM-interface";
+            Name = "IM-interface";
         }
         protected override void Receive(string data, Envelope envelope)
         {

@@ -60,8 +60,7 @@ namespace KQMLTests
         {
             try
             {
-                byte[] bytes = new byte[256];
-                string data = null;
+                byte[] bytes = new byte[256];              
 
                 NetworkStream stream = Client.GetStream();
 
