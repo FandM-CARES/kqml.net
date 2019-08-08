@@ -42,9 +42,9 @@ namespace Companions
         /// <summary>
         /// Initializes a new instance <see cref="Netonian"/>. Spawns a new thread and waits for connection
         /// </summary>
-        public Netonian() : base()
+        public Netonian(string name) : base(name)
         {
-            Name = "Netonian";
+            Name = name;
             LocalPort = 8950;
             StartTime = DateTime.Now;
             Asks = new List<string>();
@@ -88,6 +88,7 @@ namespace Companions
         {
             // TODO: CloseSocket doesn't actually closes socket. just shuts down dispatcher
             Dispatcher.Shutdown();
+            Socket.Close();
             
         }
 
@@ -99,9 +100,11 @@ namespace Companions
         {
             Asks.Add(name);
             if (subscribable)
-                Subscribers[pattern] = new List<KQMLList>();
-            else
+            {
+                Subscribers.Add(pattern, new List<KQMLList>());
                 AdvertiseSubscribe(pattern);
+            }
+                
         }
 
         /// <summary>
@@ -291,12 +294,16 @@ namespace Companions
             msg.Set("receiver", "facilitator");
             string replyId = "id" + ReplyIdCounter;
             ++ReplyIdCounter;
+
             KQMLPerformative content = new KQMLPerformative("ask-all");
             content.Set("receiver", Name);
             content.Set("in-reply-to", replyId);
             content.Set("content", pattern);
             msg.Set("content", content);
+
             Send(msg);
+
+            CloseSocket();
 
         }
 
@@ -330,6 +337,7 @@ namespace Companions
 
             Send(msg);
             // TODO: Close socket?
+            CloseSocket();
 
         }
 
@@ -374,9 +382,10 @@ namespace Companions
                     }
                 }
                 // Reset new data dictionary
-                foreach (string query in SubscribeDataNew.Keys)
+                List<string> newDataKeys = SubscribeDataNew.Keys.ToList(); ;
+                foreach(string str in newDataKeys)
                 {
-                    SubscribeDataNew[query] = null;
+                    SubscribeDataNew[str] = null;
                 }
                 Thread.Sleep(PollingInterval);
             }
@@ -668,7 +677,7 @@ namespace Companions
             Log.Debug($"Received tell: {content}");
             KQMLPerformative replyMsg = new KQMLPerformative("tell");
             replyMsg.Set("sender", Name);
-            replyMsg.Set("content", ":OK");
+            replyMsg.Set("content", ":ok");
             Reply(msg, replyMsg);
         }
 
@@ -720,12 +729,13 @@ namespace Companions
             replyContent.Append("idle");
             replyContent.Append(":machine");
             replyContent.Append(Dns.GetHostName());
+       
             reply.Set("content", replyContent);
             Reply(msg, reply);
         }
 
         /// <summary>
-        /// Wrap some data in an achieve message and send
+        /// Wrap some data in an achieve message and send to a specified receiver
         /// </summary>
         /// <param name="receiver">The intended recipient of message</param>
         /// <param name="data">The content to be incorporated in the achieve message</param>
@@ -859,7 +869,7 @@ namespace Companions
             // Log log log
             _ = XmlConfigurator.Configure(new FileInfo("logging.xml"));
 
-            Netonian net = new Netonian();
+            Netonian net = new Netonian("Netonian");
 
             net.Start();
         }

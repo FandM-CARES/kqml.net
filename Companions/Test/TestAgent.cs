@@ -16,12 +16,12 @@ namespace Companions.Test
         public volatile bool TestAchieveReturnCalled;
 
         private static readonly new ILog Log = LogManager.GetLogger(typeof(TestAgent));
-        public TestAgent()
+        public TestAgent(string name) : base(name)
         {
             TestAchieveCalled = false;
             TestAskReturnListCalled = false;
 
-            AddAsk("TestAskReturnList", "(TestAskReturnList ?_input ?return)");
+            AddAsk("TestAskReturnList", "(TestAskReturnList ?_input ?return)", true);
             AddAchieve("TestAchieve");
             AddAchieve("TestAchieveReturn");
         }
@@ -64,7 +64,7 @@ namespace Companions.Test
         static void Main(string[] args)
         {
             _ = XmlConfigurator.Configure(new FileInfo("logging.xml"));
-            TestAgent agent = new TestAgent();
+            TestAgent agent = new TestAgent("NetonianTestAgent");
             Thread.Sleep(20);
             agent.TestInsertIntoCompanion("(Started Netonian)");
 

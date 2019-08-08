@@ -20,7 +20,7 @@ namespace KQML
         public int Port;
         public bool IsApplication;
         public bool Testing;
-        //public Socket Socket;
+        public TcpClient Socket;
         public string Name;
         public bool ScanForPort;
         public bool Debug;
@@ -35,13 +35,13 @@ namespace KQML
         /// <summary>
         /// Constructor. Should handle kwargs soon.
         /// </summary>
-        public KQMLModule()
+        public KQMLModule(string name)
         {
             Host = "localhost";
             Port = 9000;
             IsApplication = false;
             Testing = false;
-            Name = "secret-agent";
+            Name = name;
             GroupName = "(secrets)";
 
             Debug = false;
@@ -50,6 +50,7 @@ namespace KQML
             MAX_PORT_TRIES = 100;
             ReplyIdCounter = 1;
             Running = true;
+
 
             //TODO: Needs to handle command line argument and change defaults
             // JRW: Worry about that later
@@ -69,8 +70,8 @@ namespace KQML
         /// <param name="port"></param>
         protected void Connect(string host, int port)
         {
-            TcpClient client = new TcpClient(host, port);
-            NetworkStream ns = client.GetStream();
+            Socket = new TcpClient(host, port);
+            NetworkStream ns = Socket.GetStream();
             In = new StreamReader(ns);
             Out = new StreamWriter(ns);
         }
@@ -228,7 +229,7 @@ namespace KQML
             KQMLObject sender = msg.Get("sender");
             if (sender != null)
             {
-                replyMsg.Set("Receiver", sender);
+                replyMsg.Set("receiver", sender);
             }
             KQMLObject replyWith = msg.Get("reply-with");
             if (replyWith != null)
@@ -383,7 +384,7 @@ namespace KQML
 
         static void Main(string[] args)
         {
-            KQMLModule module = new KQMLModule();
+            KQMLModule module = new KQMLModule("secret-agent");
             module.Ready();
             module.SubscribeRequest("chicken");
             module.SubscribeTell("egg");

@@ -2,3 +2,4 @@
 (ask-one :receiver secret-agent :content (TestAskReturnList hahaha ?return) :response :bindings)
 (achieve :receiver secret-agent :content (task :action (TestAchieve haha)))
 (achieve :receiver secret-agent :content (task :action (TestAchieveReturn haha)))
+(subscribe :receiver NetonianTestAgent :in-reply-to id1 :content (ask-all :receiver NetonianTestAgent :in-reply-to id1 :content (TestAskReturnList ?_input ?return)))

@@ -24,7 +24,7 @@ namespace KQMLTests
             test = new TestServer();
             test.StartServer();
 
-            Netonian net = new Netonian();
+            Netonian net = new Netonian("Netonian");
 
             net.Register();
             KQMLList list = KQMLList.FromString(test.stuff);
@@ -40,7 +40,7 @@ namespace KQMLTests
             test = new TestServer();
             test.StartServer();
 
-            TestAgent agent = new TestAgent();
+            TestAgent agent = new TestAgent("TestAgent");
 
             test.StartAchieveTestClient();
             Thread.Sleep(1000);
